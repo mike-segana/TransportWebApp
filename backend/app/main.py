@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import Base, engine
-from app.api import auth
+from app.api import auth, drivers, shipments
 #creates main application object - all endpoints (routes) must attach to this app directly or indirectly
 app = FastAPI()
 
@@ -21,3 +21,5 @@ def health_check():
 
 #means "take all endpoints defined in these routers and attach them to the main app"
 app.include_router(auth.router)
+app.include_router(shipments.router)
+app.include_router(drivers.router)
