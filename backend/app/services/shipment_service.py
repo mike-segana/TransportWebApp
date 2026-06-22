@@ -1,17 +1,17 @@
 from sqlalchemy.orm import Session
-from app.models.shipment import Shipment
+from app.models.shipment import Shipment, Status
 
 def create_shipment(db: Session, user_id: int, data):
     shipment = Shipment(
         user_id = user_id,
         pickup_location = data.pickup_location,
         dropoff_location = data.dropoff_location,
-        status = "pending"
+        status = Status.PENDING
     )
 
-    db.add(Shipment)
+    db.add(shipment)
     db.commit()
-    db.refresh(Shipment)
+    db.refresh(shipment)
     return shipment
 
 def get_user_shipments(db: Session, user_id: int):

@@ -9,10 +9,12 @@ router = APIRouter(prefix="/shipments", tags=["shipments"])
 def create(db: db_dependency, user: user_dependency, data: ShipmentCreate):
     return create_shipment(db, user["id"], data)
 
+#@router.get("/my")
 @router.get("/my")
 def my_shipments(db: db_dependency, user:user_dependency):
     return get_user_shipments(db, user["id"])
 
-@router.get("/all")
-def all_shipments(db: db_dependency):
+#@router.get("/all")
+@router.get("/")
+def all_shipments(db: db_dependency, user: user_dependency):
     return get_all_shipments(db)
