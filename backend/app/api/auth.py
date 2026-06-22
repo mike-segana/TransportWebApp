@@ -54,7 +54,7 @@ async def create_user(db: db_dependency, create_user_request: UserCreateRequest)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail= "Username already exists"
+            detail="Username already exists"
         )
     create_user_model = User(
         username=create_user_request.username,

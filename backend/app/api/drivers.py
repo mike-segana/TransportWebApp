@@ -7,6 +7,8 @@ from app.models.driver import Availability
 
 router = APIRouter(prefix="/drivers", tags=["drivers"])
 
+#packaging action specific inputs into a separate dedicated request class 
+#to define a clear contract for the endpoint and make future extension easier
 class StatusUpdate(BaseModel):
     new_status: Availability
 
