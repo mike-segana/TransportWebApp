@@ -8,6 +8,7 @@ from jose import jwt, JWTError
 from dotenv import load_dotenv
 import os
 from app.core.database import SessionLocal
+from app.models.user import User, Role
 
 #File defines shared FastAPI dependencies for database access, password security and JWT authentication
 
@@ -42,6 +43,23 @@ async def get_current_user(token: oauth2_bearer_dependency):
         return {'id': int(user_id)}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user')
+
 #when a route users Depends(user_dependency) it calls get_current_user, passes the bearer token, decodes the JWT
 #returns a dictionary with username and id and so user_dependency means/ is injecting the authenticated user object into this route
 user_dependency = Annotated[dict, Depends(get_current_user)]
+
+def check_admin(user: user_dependency, db: db_dependency):
+    db_user = db.query(User).filter(User.id == user["id"]).first()
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    if db_user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access only"
+        )
+    return user
+
+admin_dependency = Annotated[dict, Depends(check_admin)]

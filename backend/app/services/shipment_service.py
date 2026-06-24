@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from app.models.user import User, Role
 from app.models.shipment import Shipment, Status
 from app.models.driver import Driver, Availability
 from fastapi import HTTPException, status

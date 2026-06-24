@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from app.dependencies.db import db_dependency, user_dependency
+from app.dependencies.db import db_dependency, user_dependency, admin_dependency
 from app.services.assignment_service import assign_shipment
 
 router = APIRouter(prefix="/assignment", tags=["assignment"])
@@ -14,7 +14,7 @@ class AssignmentRequest(BaseModel):
 @router.post("/")
 def assign(
     db: db_dependency,
-    user: user_dependency,
+    admin: admin_dependency,
     data: AssignmentRequest
 ):
     return assign_shipment(db, data.driver_id, data.shipment_id)
