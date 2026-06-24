@@ -16,7 +16,7 @@ def add_driver(db: Session, data):
 def get_drivers(db: Session):
     return db.query(Driver).all()
     
-def update_status(db: Session, driver_id: int, new_status: Availability):
+def update_availability(db: Session, driver_id: int, new_status: Availability):
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
 
     if not driver:

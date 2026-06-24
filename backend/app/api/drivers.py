@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from app.dependencies.db import db_dependency, user_dependency
 from app.schemas.driver import DriverCreate, DriverUpdate
-from app.services.driver_service import add_driver, get_drivers, update_status
+from app.services.driver_service import add_driver, get_drivers, update_availability
 from app.models.driver import Availability
 
 router = APIRouter(prefix="/drivers", tags=["drivers"])
@@ -29,4 +29,4 @@ def update_driver_status(
     data: StatusUpdate,
     user: user_dependency
 ):
-    return update_status(db, driver_id, data.new_status)
+    return update_availability(db, driver_id, data.new_status)
