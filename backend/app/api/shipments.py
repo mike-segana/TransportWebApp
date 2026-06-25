@@ -10,17 +10,15 @@ router = APIRouter(prefix="/shipments", tags=["shipments"])
 def create(db: db_dependency, admin: admin_dependency, data: ShipmentCreate):
     return create_shipment(db, admin["id"], data)
 
-#@router.get("/my")
 @router.get("/my")
-def my_shipments(db: db_dependency, user:user_dependency):
+def my_shipments(db: db_dependency, user: user_dependency):
     return get_user_shipments(db, user["id"])
 
-#@router.get("/all")
 @router.get("/")
 def all_shipments(db: db_dependency, admin: admin_dependency):
     return get_all_shipments(db)
 
-@router.patch("/{shipment_id}")
+@router.patch("/{shipment_id}/start-trip")
 def start_trip(db: db_dependency, admin: admin_dependency, shipment_id: int):
     return start_transit(db, shipment_id)
 

@@ -90,3 +90,8 @@ def end_transit(db: Session, shipment_id: int):
         db.refresh(driver)
 
         return shipment
+    
+#functions
+#create request
+#view my requests
+#get all 
