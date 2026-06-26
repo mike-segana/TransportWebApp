@@ -2,6 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import Base, engine
 from app.api import auth, drivers, shipments, assignment, requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+URL = os.getenv('API_URL')
 #creates main application object - all endpoints (routes) must attach to this app directly or indirectly
 app = FastAPI()
 
@@ -10,7 +15,8 @@ Base.metadata.create_all(bind=engine)
 #prevent cors erros that may arise from frontend
 #allows frontend url to make requests to the backend
 app.add_middleware(CORSMiddleware, 
-                   allow_origins=['http://localhost:3000'], #use .env variables
+                   #allow_origins=['lhst...'], #use .env variables
+                   allow_origins=[URL],
                    allow_credentials=True, 
                    allow_methods=['*'], 
                    allow_headers=['*'])

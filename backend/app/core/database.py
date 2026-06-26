@@ -1,13 +1,16 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+import os
 
-#use SQLite database file and if doesnt exist creates it
-SQL_ALCHEMY_DATABASE_URL = 'sqlite:///transport_web-app.db'
+load_dotenv()
+#sqlalchemy is a layer between py and the db, turns classes into db tables (orm) allows to write py instead of raw sql
+#SQL_ALCHEMY_DATABASE_URL = 'sqlite:///transport_web-app.db'
+SQL_ALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 #engine is core connection later between python and database
-#fastapi uses multiple threads so same thread false disables that as sqlite normally restricts db access to one thread
-engine = create_engine(SQL_ALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False})
+engine = create_engine(SQL_ALCHEMY_DATABASE_URL)
 
 #sessionlocal is creating a temporary workspace to talk to the database
 #bind=engine connects session to db
