@@ -11,3 +11,6 @@ dist/
 node_modules/
 *.db
 *.sqlite
+.next
+.next/
+.env.local
