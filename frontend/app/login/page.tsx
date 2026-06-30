@@ -27,21 +27,22 @@ export default function LoginPage() {
     };
 
     return (
-        <div style={{ padding: 20 }}>
-            <h1>Login</h1>
+        <div className="p-6 max-w-sm mx-auto mt-20 flex flex-col justify-center"> {/*(flex)turns elements into flex container, (flex-col)stacks child elements vertically using flexbox*/}
+        {/*Tailwind css padding, (max-w-sm)width constraint, (mx-auto)horizontal centaring mt-20(top spacing moves box down)*/}
+            <h1 className="text-2xl font-bold text-black-600 tracking-tight text-center"> {/*text-2xl makes text larger,  (tracking-tight) tight letter spacing*/}
+                TransitFlow
+            </h1>
 
-            <input
-                placeholder="username"
-                onChange={(e) => setUsername(e.target.value)}
-            />
+            <input placeholder="username" className="border p-1 mb-1" onChange={(e) => setUsername(e.target.value)}/>
+            <input placeholder="password" type="password" className="border p-1" onChange={(e) => setPassword(e.target.value)}/>
 
-            <input
-                placeholder="password"
-                type="password"
-                onChange={(e) => setPassword(e.target.value)}
-            />
-
-            <button onClick={handleLogin}>Login</button>
+            <button 
+                onClick={handleLogin}
+                className="w-full mt-1 bg-blue-600 text-white py-2 rounded"> 
+                {/*(w-full)full width, (mt-4)space of 4 above button, blue-white, (py-2)vertical padding height control, rounded corners */}
+                Login
+            </button>
         </div>
+        
     );
 }
