@@ -38,10 +38,11 @@ export default function LoginPage() {
 
             <button 
                 onClick={handleLogin}
-                className="w-full mt-1 bg-blue-600 text-white py-2 rounded"> 
+                className="w-full mt-1 bg-blue-600 text-white py-2 rounded mb-1"> 
                 {/*(w-full)full width, (mt-4)space of 4 above button, blue-white, (py-2)vertical padding height control, rounded corners */}
                 Login
             </button>
+            <button onClick={() => router.push("/register")} className="w-full bg-blue-600 text-white py-1 rounded">Sign Up</button>
         </div>
         
     );
