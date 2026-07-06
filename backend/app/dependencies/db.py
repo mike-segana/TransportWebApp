@@ -1,7 +1,6 @@
 from typing import Annotated
-#imports SQLAlchemy database session type
 from sqlalchemy.orm import Session
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from jose import jwt, JWTError
@@ -28,21 +27,19 @@ def get_db():
 db_dependency = Annotated[Session, Depends(get_db)]
 #password hashing securely using bcrypt
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-#gets jwt from authorisation header
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
-oauth2_bearer_dependency = Annotated[str, Depends(oauth2_bearer)]
 
-async def get_current_user(token: oauth2_bearer_dependency):
+async def get_current_user(request: Request):
+    token = request.cookies.get("access_token") #gets token from browser cookie
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get('sub')
-        if not SECRET_KEY or not ALGORITHM:
-            raise ValueError("Missing JWT configuration")
+        payload = jwt.decode(token, SECRET_KEY, algorithmns=[ALGORITHM]) #verify and extract signature
+        user_id: str = payload.get("sub")
         if user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user')
-        return {'id': int(user_id)}
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        return {"id": int(user_id)}
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user')
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user")
 
 #when a route users Depends(user_dependency) it calls get_current_user, passes the bearer token, decodes the JWT
 #returns a dictionary with username and id and so user_dependency means/ is injecting the authenticated user object into this route

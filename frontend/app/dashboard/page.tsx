@@ -28,11 +28,6 @@ export default function Dashboard() {
             }
     }
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            router.push("/login");
-            return;
-        }
         const fetchData = async () => {
             try {
                 const [shipmentsRes, requestsRes] = await Promise.all([
@@ -43,7 +38,7 @@ export default function Dashboard() {
                 setRequests(requestsRes.data);
             } catch (err: any) {
                 if (err.response?.status === 401) {
-                    localStorage.removeItem("token");
+                    await api.post("/auth/logout/");
                     router.push("/login");
                 }
             } finally {

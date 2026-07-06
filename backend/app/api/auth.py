@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime, timezone
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
@@ -67,15 +67,32 @@ async def create_user(db: db_dependency, create_user_request: UserCreateRequest)
     return {"message": "User created successfully", "user_id": create_user_model.id, "username": create_user_model.username}
 
 
-#logs in user and returns JWT access token, authenticates user and handles unauthenticated users
-#if successful JWT access  token returned
-@router.post('/token', response_model=Token)
-async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-                                 db: db_dependency):
+@router.post('/token')
+async def login(
+    response: Response,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: db_dependency
+):
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user")
-    #token = create_access_token(user.username, user.id, timedelta(minutes=20))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate user"
+        )
     token = create_access_token(user.id, timedelta(minutes=20))
 
-    return {'access_token': token, 'token_type': 'bearer'}
+    #Storing jwt in httponly cookie
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True, #prevents client side (browser) scripts like js from accessing cookies value, protects against XSS attacks also
+        secure=False, #Set true in production for HTTPS
+        samesite="lax", #prevents cookies from being sent in cross site requests except for top level navigations like link clicks + protects against CSRF attacks
+        max_age=60 * 20
+    )
+    return {"message": "login successful"}
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("access token")
+    return {"message": "logged out"}

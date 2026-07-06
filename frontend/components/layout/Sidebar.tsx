@@ -34,8 +34,7 @@ export default function SideBar() {
             </div>
             <div>
                 <button onClick={() => {
-                    localStorage.removeItem("token");
-                    delete api.defaults.headers.common["Authorization"];
+                    api.post("/auth/logout/");
                     router.push("/login");
                 }}
                 className="text-red-600"

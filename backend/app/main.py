@@ -14,8 +14,7 @@ Base.metadata.create_all(bind=engine)
 #middleware
 #prevent cors erros that may arise from frontend
 #allows frontend url to make requests to the backend
-app.add_middleware(CORSMiddleware, 
-                   #allow_origins=['lhst...'], #use .env variables
+app.add_middleware(CORSMiddleware,
                    allow_origins=[URL],
                    allow_credentials=True, 
                    allow_methods=['*'], 

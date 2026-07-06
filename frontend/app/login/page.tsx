@@ -16,11 +16,10 @@ export default function LoginPage() {
             formData.append("username", username);
             formData.append("password", password);
 
-            const res = await api.post("/auth/token", formData); //backend returns jwt
-
-            localStorage.setItem("token", res.data.access_token); //frontend stores jwt in browser
-
-            router.push("/dashboard");
+            const res = await api.post("/auth/token", formData);
+            if (res.status === 200) {
+                router.push("/dashboard");
+            }
         } catch (err) {
             alert("Login failed");
         }

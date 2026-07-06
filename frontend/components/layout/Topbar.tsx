@@ -7,8 +7,7 @@ export default function TopBar() {
     const router = useRouter();
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        delete api.defaults.headers.common["Authorization"];
+        api.post("/auth/logout/");
         router.push("/login");
     };
 
