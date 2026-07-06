@@ -86,8 +86,8 @@ async def login(
         key="access_token",
         value=token,
         httponly=True, #prevents client side (browser) scripts like js from accessing cookies value, protects against XSS attacks also
-        secure=False, #Set true in production for HTTPS
-        samesite="lax", #prevents cookies from being sent in cross site requests except for top level navigations like link clicks + protects against CSRF attacks
+        secure=True, #Set true in production for HTTPS
+        samesite="none", #prevents cookies from being sent in cross site requests except for top level navigations like link clicks + protects against CSRF attacks
         max_age=60 * 20
     )
     return {"message": "login successful"}
