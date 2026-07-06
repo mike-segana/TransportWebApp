@@ -33,7 +33,7 @@ async def get_current_user(request: Request):
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithmns=[ALGORITHM]) #verify and extract signature
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) #verify and extract signature
         user_id: str = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")

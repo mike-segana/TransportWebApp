@@ -38,7 +38,7 @@ export default function Dashboard() {
                 setRequests(requestsRes.data);
             } catch (err: any) {
                 if (err.response?.status === 401) {
-                    await api.post("/auth/logout/");
+                    await api.post("/auth/logout");
                     router.push("/login");
                 }
             } finally {

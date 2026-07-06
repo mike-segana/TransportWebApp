@@ -7,7 +7,7 @@ export default function TopBar() {
     const router = useRouter();
 
     const handleLogout = () => {
-        api.post("/auth/logout/");
+        api.post("/auth/logout");
         router.push("/login");
     };
 

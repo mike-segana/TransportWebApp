@@ -34,7 +34,7 @@ export default function SideBar() {
             </div>
             <div>
                 <button onClick={() => {
-                    api.post("/auth/logout/");
+                    api.post("/auth/logout");
                     router.push("/login");
                 }}
                 className="text-red-600"

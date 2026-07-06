@@ -94,5 +94,5 @@ async def login(
 
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie("access token")
+    response.delete_cookie("access_token")
     return {"message": "logged out"}
