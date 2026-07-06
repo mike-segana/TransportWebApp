@@ -8,7 +8,9 @@ export default function TopBar() {
 
     const handleLogout = () => {
         api.post("/auth/logout");
-        router.push("/login");
+        //router.push("/login");
+        router.replace("/login");
+        router.refresh();
     };
 
     return (

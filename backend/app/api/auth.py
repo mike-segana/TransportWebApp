@@ -7,7 +7,7 @@ from jose import jwt
 from dotenv import load_dotenv
 import os
 from app.models.user import User
-from app.dependencies.db import db_dependency, bcrypt_context
+from app.dependencies.db import db_dependency, bcrypt_context, user_dependency
 from app.schemas.auth import UserCreateRequest, Token
 
 #file for authentication related endpoints
@@ -92,7 +92,16 @@ async def login(
     )
     return {"message": "login successful"}
 
+#used for route authentication in frontend
+@router.get("/me")
+def me(user: user_dependency):
+    return user
+
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie("access_token")
+    response.delete_cookie(
+    key="access_token",
+    secure=True,
+    samesite="none"
+)
     return {"message": "logged out"}

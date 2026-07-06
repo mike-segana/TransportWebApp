@@ -37,12 +37,11 @@ export default function Dashboard() {
                 setShipments(shipmentsRes.data);
                 setRequests(requestsRes.data);
             } catch (err: any) {
-                //if (err.response?.status === 401) {
-                //    await api.post("/auth/logout");
-                //    router.push("/login");
-                //}
-                console.log(err.response?.data);
-                router.push("/login");
+                //console.log(err.response?.data);
+                //router.push("/login");
+                if (err.response?.status === 401) {
+                    router.replace("/login");
+                }
             } finally {
                 setLoading(false);
             }
