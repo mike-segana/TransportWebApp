@@ -16,8 +16,13 @@ export default function LoginPage() {
             formData.append("username", username);
             formData.append("password", password);
 
-            const res = await api.post("/auth/token", formData);
-            if (res.status === 200) {
+            //const res = await api.post("/auth/token", formData);
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                body: formData,
+            });
+            //if (res.status === 200) {
+            if (res.ok) {
                 router.push("/dashboard");
             }
         } catch (err) {

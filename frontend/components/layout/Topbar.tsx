@@ -6,9 +6,15 @@ import { api } from "@/lib/api";
 export default function TopBar() {
     const router = useRouter();
 
-    const handleLogout = () => {
-        api.post("/auth/logout");
+    const handleLogout = async () => {
+        //api.post("/auth/logout");
         //router.push("/login");
+        //router.replace("/login");
+        //router.refresh();
+
+        await fetch("/api/auth/logout", {
+            method: "POST",
+        });
         router.replace("/login");
         router.refresh();
     };

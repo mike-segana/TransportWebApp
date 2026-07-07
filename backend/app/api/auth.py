@@ -81,6 +81,7 @@ async def login(
         )
     token = create_access_token(user.id, timedelta(minutes=20))
 
+    '''
     #Storing jwt in httponly cookie
     response.set_cookie(
         key="access_token",
@@ -90,7 +91,9 @@ async def login(
         samesite="none", #prevents cookies from being sent in cross site requests except for top level navigations like link clicks + protects against CSRF attacks
         max_age=60 * 20
     )
-    return {"message": "login successful"}
+    '''
+    #return {"message": "login successful"}
+    return {"access_token": token, "token_type": "bearer"}
 
 #used for route authentication in frontend
 @router.get("/me")

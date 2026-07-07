@@ -6,6 +6,14 @@ import { api } from "@/lib/api";
 export default function SideBar() {
     const router = useRouter();
 
+    const handleLogout = async () => {
+        await fetch("/api/auth/logout", {
+            method: "POST",
+        });
+        router.replace("/login");
+        router.refresh();
+    };
+
     return (
         <div className="w-64 h-screen border-r p-4 flex flex-col justify-between">
             <div className="flex flex-col gap-4">
@@ -33,16 +41,7 @@ export default function SideBar() {
                 </button>
             </div>
             <div>
-                <button onClick={() => {
-                    api.post("/auth/logout");
-                    //router.push("/login");
-                    router.replace("/login");
-                    router.refresh();
-                }}
-                className="text-red-600"
-                >
-                    Logout
-                </button>
+                <button onClick={handleLogout} className="text-red-600">Logout</button>
             </div>
         </div>
     );
