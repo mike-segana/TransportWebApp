@@ -31,14 +31,12 @@ export default function Dashboard() {
         const fetchData = async () => {
             try {
                 const [shipmentsRes, requestsRes] = await Promise.all([
-                    api.get("/shipments/my"),
-                    api.get("/requests/my"),
+                    api.get("/api/backend/shipments/my"),
+                    api.get("/api/backend/requests/my"),
                 ]);
                 setShipments(shipmentsRes.data);
                 setRequests(requestsRes.data);
             } catch (err: any) {
-                //console.log(err.response?.data);
-                //router.push("/login");
                 if (err.response?.status === 401) {
                     router.replace("/login");
                 }

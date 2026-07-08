@@ -1,9 +1,8 @@
+//middleware runs before rendering to protect routes by checking for access_token
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-    console.log("Cookie:", request.cookies.get("access_token"));
-
     if (
         request.nextUrl.pathname.startsWith("/dashboard") &&
         !request.cookies.get("access_token")

@@ -2,7 +2,6 @@
               //server: when you want data, security or dont need clicks/ interactions - client when: user interacts with UI, state changes in real time, browser APIs are needed
 
 import { useState } from "react";
-import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -16,12 +15,10 @@ export default function LoginPage() {
             formData.append("username", username);
             formData.append("password", password);
 
-            //const res = await api.post("/auth/token", formData);
             const res = await fetch("/api/auth/login", {
                 method: "POST",
                 body: formData,
             });
-            //if (res.status === 200) {
             if (res.ok) {
                 router.push("/dashboard");
             }

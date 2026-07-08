@@ -29,7 +29,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 async def get_current_user(request: Request):
-    token = request.cookies.get("access_token") #gets token from browser cookie
+    token = request.cookies.get("access_token") #gets token from HttpOnly cookie
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     try:

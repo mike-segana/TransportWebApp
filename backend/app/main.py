@@ -20,10 +20,6 @@ app.add_middleware(CORSMiddleware,
                    allow_methods=['*'], 
                    allow_headers=['*'])
 
-#@app.get("/")
-#def health_check():
-    #return 'Health check complete'
-
 #means "take all endpoints defined in these routers and attach them to the main app"
 app.include_router(auth.router)
 app.include_router(shipments.router)

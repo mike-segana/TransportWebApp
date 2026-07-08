@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         {
             method: "POST",
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
+                "Content-Type": "application/x-www-form-urlencoded", //fastapi oauth2 format
             },
             body,
         }

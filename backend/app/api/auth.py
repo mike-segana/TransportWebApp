@@ -81,30 +81,4 @@ async def login(
         )
     token = create_access_token(user.id, timedelta(minutes=20))
 
-    '''
-    #Storing jwt in httponly cookie
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True, #prevents client side (browser) scripts like js from accessing cookies value, protects against XSS attacks also
-        secure=True, #Set true in production for HTTPS
-        samesite="none", #prevents cookies from being sent in cross site requests except for top level navigations like link clicks + protects against CSRF attacks
-        max_age=60 * 20
-    )
-    '''
-    #return {"message": "login successful"}
     return {"access_token": token, "token_type": "bearer"}
-
-#used for route authentication in frontend
-@router.get("/me")
-def me(user: user_dependency):
-    return user
-
-@router.post("/logout")
-def logout(response: Response):
-    response.delete_cookie(
-    key="access_token",
-    secure=True,
-    samesite="none"
-)
-    return {"message": "logged out"}
