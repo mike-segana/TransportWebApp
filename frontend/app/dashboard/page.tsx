@@ -98,7 +98,17 @@ export default function Dashboard() {
                                     <td className="py-2 px-3">{ship.id}</td>
                                     <td className="py-2 px-3">{ship.pickup_location}</td>
                                     <td className="py-2 px-3">{ship.dropoff_location}</td>
-                                    <td className="py-2 px-3">{ship.status}</td>
+                                    <td className="py-2 px-3">
+                                        {ship.status === "in_transit" ? (
+                                            <span className="px-2 py-1 rounded bg-blue-100">{ship.status}</span>
+                                        ) : ship.status === "completed" ? (
+                                            <span className="px-2 py-1 rounded bg-green-100">{ship.status}</span>
+                                        ) : ship.status === "assigned" ? (
+                                            <span className="px-2 py-1 rounded bg-yellow-100">{ship.status}</span>
+                                        ) : (
+                                            <span className="px-2 py-1 rounded bg-gray-100">{ship.status}</span>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -128,7 +138,15 @@ export default function Dashboard() {
                                     <td className="py-2 px-3">{req.id}</td>
                                     <td className="py-2 px-3">{req.pickup_location}</td>
                                     <td className="py-2 px-3">{req.dropoff_location}</td>
-                                    <td className="py-2 px-3">{req.request_status}</td>
+                                    <td className="py-2 px-3">
+                                        {req.request_status === "denied" ? (
+                                            <span className="px-2 py-1 rounded bg-red-100">{req.request_status}</span>
+                                        ) :req.request_status === "accepted" ? (
+                                            <span className="px-2 py-1 rounded bg-green-100">{req.request_status}</span>
+                                        ) : (
+                                            <span className="px-2 py-1 rounded bg-gray-100">{req.request_status}</span>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
