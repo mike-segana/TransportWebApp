@@ -24,12 +24,21 @@ def get_db():
     finally:
         db.close()
 
+#allows authorisation through fastapi docs or http only cookie
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
+
 db_dependency = Annotated[Session, Depends(get_db)]
 #password hashing securely using bcrypt
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
-async def get_current_user(request: Request):
-    token = request.cookies.get("access_token") #gets token from HttpOnly cookie
+async def get_current_user(request: Request, bearer_token: Annotated[str | None, Depends(oauth2_scheme)] = None):
+    token = request.cookies.get("access_token") #gets token from frontend HttpOnly cookie
+
+    if not token: #gets token from backend docs authorisation unless frontend server side cookie provided
+        auth = request.headers.get("Authorization")
+        if auth and auth.startswith("Bearer "):
+            token = auth.split(" ", 1)[1]
+
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     try:
