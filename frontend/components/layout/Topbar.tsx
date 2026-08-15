@@ -1,45 +1,111 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import { usePathname } from "next/navigation";
 
-export default function TopBar() {
-    const router = useRouter();
+export default function TopBar({
+    sidebarOpen,
+    onToggleSidebar,
+}: {
+    sidebarOpen: boolean;
+    onToggleSidebar: () => void;
+}) {
+    const pathname = usePathname();
 
-    const handleLogout = async () => {
-        //api.post("/auth/logout");
-        //router.push("/login");
-        //router.replace("/login");
-        //router.refresh();
+    const getPageInfo = () => {
+        if (pathname === "/dashboard") {
+            return {
+                title: "Dashboard",
+                description: "Overview of your transport activity",
+            };
+        }
 
-        await fetch("/api/auth/logout", {
-            method: "POST",
-        });
-        router.replace("/login");
-        router.refresh();
+        if (pathname.startsWith("/dashboard/requests")) {
+            return {
+                title: "Requests",
+                description: "Manage your transport requests",
+            };
+        }
+
+        if (pathname.startsWith("/dashboard/shipments")) {
+            return {
+                title: "Shipments",
+                description: "Track your active and completed shipments",
+            };
+        }
+
+        if (pathname.startsWith("/dashboard/create-request")) {
+            return {
+                title: "Create Request",
+                description: "Submit a new transport request",
+            };
+        }
+
+        return {
+            title: "TransitFlow",
+            description: "Transport management",
+        };
     };
 
+    const page = getPageInfo();
+
     return (
-        <div className="flex justify-between items-center p-4 border-b bg-white">
-            {/*Left Side*/}
-            <div>
-                <h1 className="text-lg font-semibold">
-                    Welcome back 👋
-                </h1>
+        <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-black/[0.06] bg-white px-5 sm:px-7 lg:px-8">
+            {/* Left */}
+            <div className="flex min-w-0 items-center gap-3">
+                <button
+                    type="button"
+                    onClick={onToggleSidebar}
+                    aria-label={
+                        sidebarOpen
+                            ? "Collapse sidebar"
+                            : "Open sidebar"
+                    }
+                    aria-expanded={sidebarOpen}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-black/[0.06] bg-[#FAFAF9] text-black/45 transition hover:border-black/[0.1] hover:bg-black/[0.025] hover:text-[#171A1F]"
+                >
+                    <span className="text-lg leading-none">
+                        {sidebarOpen ? "‹" : "☰"}
+                    </span>
+                </button>
+
+                <div className="min-w-0">
+                    <h1 className="truncate text-base font-semibold tracking-[-0.02em] text-[#171A1F]">
+                        {page.title}
+                    </h1>
+
+                    <p className="mt-0.5 hidden truncate text-xs text-black/35 sm:block">
+                        {page.description}
+                    </p>
+                </div>
             </div>
-            {/*Right Side*/}
-            <div className="flex items-center gap-4">
-                {/*Placeholder for notification icon*/}
-                <span className="text-gray-500">🔔</span>
-            
-                {/*Profile*/}
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gray-300">
-                        <span className="text-sm">User</span>
+
+            {/* Right */}
+            <div className="flex items-center gap-3">
+                <button
+                    type="button"
+                    disabled
+                    aria-label="Notifications"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/[0.06] bg-[#FAFAF9] text-sm text-black/30"
+                >
+                    •
+                </button>
+
+                <div className="flex items-center gap-2.5">
+                    <div className="hidden text-right sm:block">
+                        <p className="text-xs font-semibold text-[#171A1F]">
+                            User
+                        </p>
+
+                        <p className="text-[10px] text-black/35">
+                            Customer
+                        </p>
+                    </div>
+
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#171A1F] text-xs font-bold text-white">
+                        U
                     </div>
                 </div>
-                <button onClick={handleLogout} className="textl-sm text-red-600">Logout</button>
             </div>
-        </div>
+        </header>
     );
 }

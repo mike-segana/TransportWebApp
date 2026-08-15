@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from app.dependencies.db import db_dependency, user_dependency, admin_dependency
-from app.schemas.request import RequestCreate
+from app.schemas.request import RequestCreate, PickupTimeSlot
 from app.schemas.shipment import ShipmentResponse
 from app.services.request_service import create_request, user_view_requests, view_all_requests, approve_request, deny_request
 
@@ -26,3 +26,7 @@ def approve(db: db_dependency, admin: admin_dependency, request_id: int):
 @router.patch("/{request_id}/deny")
 def deny(db: db_dependency, admin: admin_dependency, request_id: int):
     return deny_request(db, request_id)
+
+@router.get("/time-slots")
+def get_pickup_time_slots():
+    return [slot.value for slot in PickupTimeSlot]

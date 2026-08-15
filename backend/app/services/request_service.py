@@ -7,10 +7,26 @@ from fastapi import HTTPException, status
 
 def create_request(db: Session, user_id: int, data):
     request = Request(
-        user_id = user_id,
-        pickup_location = data.pickup_location,
-        dropoff_location = data.dropoff_location,
-        request_status = RequestStatus.PENDING
+        user_id=user_id,
+        pickup_location=data.pickup_location,
+        dropoff_location=data.dropoff_location,
+        pickup_date=data.pickup_date,
+        pickup_time_slot=data.pickup_time_slot,
+
+        pickup_address=data.pickup_address,
+        pickup_postcode=data.pickup_postcode,
+        dropoff_address=data.dropoff_address,
+        dropoff_postcode=data.dropoff_postcode,
+
+        helpers_needed=data.helpers_needed,
+        pickup_floor=data.pickup_floor,
+        pickup_has_lift=data.pickup_has_lift,
+        dropoff_floor=data.dropoff_floor,
+        dropoff_has_lift=data.dropoff_has_lift,
+
+        pickup_loading_minutes=data.pickup_loading_minutes,
+        dropoff_loading_minutes=data.dropoff_loading_minutes,
+        request_status=RequestStatus.PENDING,
     )
     db.add(request)
     db.commit()

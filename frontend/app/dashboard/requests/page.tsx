@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 export default function Requests() {
     const router = useRouter();
+
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -16,91 +17,163 @@ export default function Requests() {
                 const res = await api.get("/api/backend/requests/my");
                 setRequests(res.data);
             } catch (err: any) {
-                if (err.respone?.status === 401) {
+                if (err.response?.status === 401) {
                     router.replace("/login");
+                } else {
+                    setError("Unable to load your requests.");
                 }
             } finally {
                 setLoading(false);
             }
         };
+
         fetchRequests();
-    }, []);
+    }, [router]);
+
+    const statusStyle = (status: string) => {
+        switch (status) {
+            case "accepted":
+                return "bg-emerald-50 text-emerald-700 border-emerald-100";
+            case "denied":
+                return "bg-red-50 text-red-700 border-red-100";
+            default:
+                return "bg-amber-50 text-amber-700 border-amber-100";
+        }
+    };
 
     if (loading) {
         return (
-            <div className="p-8">
-                <p>Loading Requests...</p>
-            </div>
+            <main className="min-h-0 flex-1 overflow-y-auto bg-[#F7F7F5]">
+                <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8">
+                    <div className="animate-pulse space-y-5">
+                        <div className="h-8 w-48 rounded-lg bg-black/5" />
+                        <div className="h-4 w-72 rounded bg-black/5" />
+                        <div className="h-72 rounded-2xl bg-white" />
+                    </div>
+                </div>
+            </main>
         );
     }
 
-    if (error) {
-        return (
-            <div className="p-8">
-                <p className="text-red-600">{error}</p>
-                <button
-                    onClick={() => window.location.reload()}
-                    className="mt-4 bg-blue-600 text0white px-4 py-2 rounded">
-                        Retry
-                    </button>
-            </div>
-        );
-    }
     return (
-        <div className="p-8">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold">My Requests</h1>
-                    <p className="text-gray-500">Track your current and previous requests</p>
-                </div>
-                <button 
-                    onClick={() => router.push("/dashboard/create-request")}
-                    className="bg-blue-600 text-white px-4 py-2 rounded">Create Shipment Request
-                </button>
-            </div>
-            {requests.length === 0 ? (
-                <div className="border roundedp-6 text-center">
-                    <p className="mb-6">
-                        You have no requests yet
-                    </p>
+        <main className="min-h-0 flex-1 overflow-y-auto bg-[#F7F7F5]">
+            <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
+                <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#315CFF]">
+                            Requests
+                        </p>
+
+                        <h1 className="text-3xl font-semibold tracking-[-0.04em] text-[#171A1F]">
+                            My requests
+                        </h1>
+
+                        <p className="mt-2 text-sm text-black/40">
+                            Track requests you have submitted.
+                        </p>
+                    </div>
+
                     <button
                         onClick={() => router.push("/dashboard/create-request")}
-                        className="bg-blue-600 text-white px-4 py-2 rounded">Create your first request
+                        className="h-11 rounded-xl bg-[#315CFF] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(49,92,255,0.16)] transition hover:bg-[#416BFF]"
+                    >
+                        + Create request
                     </button>
                 </div>
-            ) : (
-                <div className="border rounded overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b text-left">
-                                <th className="p-3">ID</th>
-                                <th className="p-3">Pickup</th>
-                                <th className="p-3">Dropoff</th>
-                                <th className="p-3">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {requests.map((request) => (
-                                <tr key={request.id} className="border-b">
-                                    <td className="p-3">{request.id}</td>
-                                    <td className="p-3">{request.pickup_location}</td>
-                                    <td className="p-3">{request.dropoff_location}</td>
-                                    <td className="p-3">
-                                        {request.request_status === "denied" ? (
-                                            <span className="px-2 py-1 rounded bg-red-100">{request.request_status}</span>
-                                        ) : request.request_status === "accepted" ? (
-                                            <span className="px-2 py-1 rounded bg-green-100">{request.request_status}</span>
-                                        ) : (
-                                            <span className="px-2 py-1 rounded bg-gray-100">{request.request_status}</span>
-                                        )}
-                                    </td>
-                                    
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </div>
+
+                {error && (
+                    <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        {error}
+                    </div>
+                )}
+
+                {requests.length === 0 ? (
+                    <div className="rounded-2xl border border-black/[0.06] bg-white p-12 text-center shadow-[0_12px_40px_rgba(0,0,0,0.035)]">
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#315CFF]/[0.08] text-[#315CFF]">
+                            +
+                        </div>
+
+                        <h2 className="text-lg font-semibold text-[#171A1F]">
+                            No requests yet
+                        </h2>
+
+                        <p className="mx-auto mt-2 max-w-md text-sm text-black/40">
+                            Create your first transport request to get started.
+                        </p>
+
+                        <button
+                            onClick={() => router.push("/dashboard/create-request")}
+                            className="mt-6 rounded-xl bg-[#315CFF] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#416BFF]"
+                        >
+                            Create your first request
+                        </button>
+                    </div>
+                ) : (
+                    <div className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-[0_12px_40px_rgba(0,0,0,0.035)]">
+                        <div className="border-b border-black/[0.06] px-5 py-4 sm:px-6">
+                            <h2 className="font-semibold text-[#171A1F]">
+                                Request history
+                            </h2>
+
+                            <p className="mt-1 text-xs text-black/35">
+                                {requests.length} request
+                                {requests.length !== 1 ? "s" : ""}
+                            </p>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[650px] text-sm">
+                                <thead>
+                                    <tr className="border-b border-black/[0.06] text-left text-[10px] font-bold uppercase tracking-[0.14em] text-black/35">
+                                        <th className="px-6 py-4">ID</th>
+                                        <th className="px-6 py-4">Pickup</th>
+                                        <th className="px-6 py-4">Drop-off</th>
+                                        <th className="px-6 py-4">Date</th>
+                                        <th className="px-6 py-4">Status</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {requests.map((request) => (
+                                        <tr
+                                            key={request.id}
+                                            className="border-b border-black/[0.045] last:border-0 hover:bg-black/[0.012]"
+                                        >
+                                            <td className="px-6 py-4 font-semibold text-[#171A1F]">
+                                                #{request.id}
+                                            </td>
+
+                                            <td className="px-6 py-4 text-black/60">
+                                                {request.pickup_location}
+                                            </td>
+
+                                            <td className="px-6 py-4 text-black/60">
+                                                {request.dropoff_location}
+                                            </td>
+
+                                            <td className="px-6 py-4 text-black/45">
+                                                {request.pickup_date
+                                                    ? new Date(request.pickup_date).toLocaleDateString()
+                                                    : "—"}
+                                            </td>
+
+                                            <td className="px-6 py-4">
+                                                <span
+                                                    className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyle(
+                                                        request.request_status
+                                                    )}`}
+                                                >
+                                                    {request.request_status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </main>
     );
 }

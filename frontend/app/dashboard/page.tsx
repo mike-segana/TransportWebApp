@@ -1,32 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react"; //useEffect runs side effects things outside of rendering such as api calls, timers, subscriptions, DOM interactions
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import TopBar from "@/components/layout/Topbar";
-import SideBar from "@/components/layout/Sidebar";
 
+type Shipment = {
+    id: number;
+    pickup_location: string;
+    dropoff_location: string;
+    status: string;
+};
+
+type Request = {
+    id: number;
+    pickup_location: string;
+    dropoff_location: string;
+    request_status: string;
+};
 
 export default function Dashboard() {
     const router = useRouter();
-    const [shipments, setShipments] = useState<any[]>([]); //specifies shipments as an array of any type (loose typing)
-    const [requests, setRequests] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true); //waits until jwt token authenticated before loading page
-    const [form, setForm] = useState({pickup_location: "", dropoff_location: "", description: "",});
-    const pendingRequests = requests.filter((req) => req.request_status === "pending");
-    const activeShipments = shipments.filter((ship) => ["pending", "assigned", "in_transit"].includes(ship.status));
-    const deliveredShipments = shipments.filter((ship) => ship.status === "completed");
-    const recentShipments = shipments.slice(0,3);
-    const recentRequests = requests.slice(0,3);
 
-    const createRequest = async () => {
-            try {
-                const res = await api.post("/requests/", form);
-                alert(res.data.message);
-            } catch (err: any) {
-                alert(err.response?.data?.detail);
-            }
-    }
+    const [shipments, setShipments] = useState<Shipment[]>([]);
+    const [requests, setRequests] = useState<Request[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const pendingRequests = requests.filter(
+        (request) => request.request_status.toLowerCase() === "pending"
+    );
+
+    const activeShipments = shipments.filter((shipment) =>
+        ["pending", "assigned", "in_transit"].includes(
+            shipment.status.toLowerCase()
+        )
+    );
+
+    const deliveredShipments = shipments.filter(
+        (shipment) => shipment.status.toLowerCase() === "completed"
+    );
+
+    const recentShipments = shipments.slice(0, 4);
+    const recentRequests = requests.slice(0, 4);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -34,6 +49,7 @@ export default function Dashboard() {
                     api.get("/api/backend/shipments/my"),
                     api.get("/api/backend/requests/my"),
                 ]);
+
                 setShipments(shipmentsRes.data);
                 setRequests(requestsRes.data);
             } catch (err: any) {
@@ -44,125 +60,301 @@ export default function Dashboard() {
                 setLoading(false);
             }
         };
+
         fetchData();
-    }, []); //empty array means this only run once when page loads
-    if (loading) return null;
+    }, [router]);
+
+    if (loading) {
+        return (
+            <div className="flex min-h-[300px] items-center justify-center">
+                <div className="text-sm text-black/40">
+                    Loading dashboard...
+                </div>
+            </div>
+        );
+    }
+
+    const statusStyle = (status: string) => {
+        switch (status.toLowerCase()) {
+            case "completed":
+                return "bg-emerald-50 text-emerald-700";
+
+            case "accepted":
+            case "assigned":
+                return "bg-blue-50 text-blue-700";
+
+            case "in_transit":
+                return "bg-indigo-50 text-indigo-700";
+
+            case "denied":
+                return "bg-red-50 text-red-700";
+
+            default:
+                return "bg-black/[0.04] text-black/50";
+        }
+    };
+
     return (
-        <div className="p-8">
-            <h2 className="text-xl font-semibold mb-4">Overview</h2>
-            <div className="grid grid-cols-4 gap-4 mb-8">
-                <div className="border rounded p-4">
-                    <p>Active Shipments</p>
-                    <h3 className="text-2xl font-bold">{activeShipments.length}</h3>
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                    <p className="text-xs font-medium text-[#315CFF]">
+                        Overview
+                    </p>
+
+                    <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">
+                        Welcome back
+                    </h2>
+
+                    <p className="mt-1 text-sm text-black/40">
+                        Here's what's happening with your transport.
+                    </p>
                 </div>
 
-                <div className="border rounded p-4">
-                    <p>Delivered Shipments</p>
-                    <h3 className="text-2xl font-bold">{deliveredShipments.length}</h3>
-                </div>
-
-                <div className="border rounded p-4">
-                    <p>Pending Requests</p>
-                    <h3 className="text-2xl font-bold">{pendingRequests.length}</h3>
-                </div>
-
-                <div className="border rounded p-4">
-                    <p>Total Requests</p>
-                    <h3 className="text-2xl font-bold">{requests.length}</h3>
-                </div>
-            </div>
-
-            {/*RECENT TABLES*/}
-            <div className="grid grid-cols-2 gap-6 mb-8">
-
-                {/*Recent Shipments*/}
-                <div className="border rounded p-4 overflow-x-auto">
-                    <div className="flex justify-between mb-2">
-                        <h3 className="font-semibold">Recent Shipments</h3>
-                        <button onClick={() => router.push("/dashboard/shipments")} className="text-blue-600 text-sm">View All</button>
-                    </div>
-
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="text-left border-b">
-                                <th className="py-2 px-3 w-24 whitespace-nowrap">ID</th>
-                                <th className="py-2 px-3">Start</th>
-                                <th className="py-2 px-3">Destination</th>
-                                <th className="py-2 px-3 w-28 whitespace-nowrap">Status</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {recentShipments.map((ship) => (
-                                <tr key={ship.id} className="border-b last:border-0">
-                                    <td className="py-2 px-3">{ship.id}</td>
-                                    <td className="py-2 px-3">{ship.pickup_location}</td>
-                                    <td className="py-2 px-3">{ship.dropoff_location}</td>
-                                    <td className="py-2 px-3">
-                                        {ship.status === "in_transit" ? (
-                                            <span className="px-2 py-1 rounded bg-blue-100">{ship.status}</span>
-                                        ) : ship.status === "completed" ? (
-                                            <span className="px-2 py-1 rounded bg-green-100">{ship.status}</span>
-                                        ) : ship.status === "assigned" ? (
-                                            <span className="px-2 py-1 rounded bg-yellow-100">{ship.status}</span>
-                                        ) : (
-                                            <span className="px-2 py-1 rounded bg-gray-100">{ship.status}</span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/*Recent Requests*/}
-                <div className="border rounded p-4 overflow-x-auto">
-                    <div className="flex justify-between mb-2">
-                        <h3 className="font-semibold">Recent Requests</h3>
-                        <button onClick={() => router.push("/dashboard/requests")} className="text-blue-600 text-sm">View All</button>
-                    </div>
-
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="text-left border-b">
-                                <th className="py-2 px-3 w-24 whitespace-nowrap">ID</th>
-                                <th className="py-2 px-3">Start</th>
-                                <th className="py-2 px-3">Destination</th>
-                                <th className="py-2 px-3 w-28 whitespace-nowrap">Status</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {recentRequests.map((req) => (
-                                <tr key={req.id} className="border-b last:border-0">
-                                    <td className="py-2 px-3">{req.id}</td>
-                                    <td className="py-2 px-3">{req.pickup_location}</td>
-                                    <td className="py-2 px-3">{req.dropoff_location}</td>
-                                    <td className="py-2 px-3">
-                                        {req.request_status === "denied" ? (
-                                            <span className="px-2 py-1 rounded bg-red-100">{req.request_status}</span>
-                                        ) :req.request_status === "accepted" ? (
-                                            <span className="px-2 py-1 rounded bg-green-100">{req.request_status}</span>
-                                        ) : (
-                                            <span className="px-2 py-1 rounded bg-gray-100">{req.request_status}</span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-            </div>
-
-            {/*CTA*/}
-            <div className="mt-8">
-                <button onClick={() => router.push("/dashboard/create-request")} className="bg-blue-600 text-white px-4 py-2 rounded">
-                    Create Request
+                <button
+                    onClick={() =>
+                        router.push("/dashboard/create-request")
+                    }
+                    className="rounded-xl bg-[#315CFF] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(49,92,255,0.16)] transition hover:bg-[#416BFF]"
+                >
+                    + Create request
                 </button>
             </div>
 
+            {/* Stats */}
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard
+                    label="Active shipments"
+                    value={activeShipments.length}
+                    description="Currently in progress"
+                />
+
+                <StatCard
+                    label="Delivered"
+                    value={deliveredShipments.length}
+                    description="Completed shipments"
+                />
+
+                <StatCard
+                    label="Pending requests"
+                    value={pendingRequests.length}
+                    description="Awaiting review"
+                />
+
+                <StatCard
+                    label="Total requests"
+                    value={requests.length}
+                    description="All submitted requests"
+                />
+            </div>
+
+            {/* Tables */}
+            <div className="grid gap-5 xl:grid-cols-2">
+                {/* Shipments */}
+                <DataCard
+                    title="Recent shipments"
+                    description="Your latest shipment activity"
+                    onViewAll={() =>
+                        router.push("/dashboard/shipments")
+                    }
+                >
+                    {recentShipments.length === 0 ? (
+                        <EmptyState text="No shipments yet." />
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[520px] text-sm">
+                                <thead>
+                                    <tr className="border-b border-black/[0.06] text-left text-xs text-black/35">
+                                        <th className="px-4 py-3 font-medium">
+                                            ID
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Pickup
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Destination
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Status
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {recentShipments.map((shipment) => (
+                                        <tr
+                                            key={shipment.id}
+                                            className="border-b border-black/[0.04] last:border-0"
+                                        >
+                                            <td className="px-4 py-3 font-medium">
+                                                #{shipment.id}
+                                            </td>
+
+                                            <td className="max-w-[140px] truncate px-4 py-3 text-black/60">
+                                                {shipment.pickup_location}
+                                            </td>
+
+                                            <td className="max-w-[140px] truncate px-4 py-3 text-black/60">
+                                                {shipment.dropoff_location}
+                                            </td>
+
+                                            <td className="px-4 py-3">
+                                                <span
+                                                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${statusStyle(
+                                                        shipment.status
+                                                    )}`}
+                                                >
+                                                    {shipment.status.replace(
+                                                        "_",
+                                                        " "
+                                                    )}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </DataCard>
+
+                {/* Requests */}
+                <DataCard
+                    title="Recent requests"
+                    description="Your latest request activity"
+                    onViewAll={() =>
+                        router.push("/dashboard/requests")
+                    }
+                >
+                    {recentRequests.length === 0 ? (
+                        <EmptyState text="No requests yet." />
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[520px] text-sm">
+                                <thead>
+                                    <tr className="border-b border-black/[0.06] text-left text-xs text-black/35">
+                                        <th className="px-4 py-3 font-medium">
+                                            ID
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Pickup
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Destination
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Status
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {recentRequests.map((request) => (
+                                        <tr
+                                            key={request.id}
+                                            className="border-b border-black/[0.04] last:border-0"
+                                        >
+                                            <td className="px-4 py-3 font-medium">
+                                                #{request.id}
+                                            </td>
+
+                                            <td className="max-w-[140px] truncate px-4 py-3 text-black/60">
+                                                {request.pickup_location}
+                                            </td>
+
+                                            <td className="max-w-[140px] truncate px-4 py-3 text-black/60">
+                                                {request.dropoff_location}
+                                            </td>
+
+                                            <td className="px-4 py-3">
+                                                <span
+                                                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${statusStyle(
+                                                        request.request_status
+                                                    )}`}
+                                                >
+                                                    {request.request_status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </DataCard>
+            </div>
         </div>
     );
+}
 
+function StatCard({
+    label,
+    value,
+    description,
+}: {
+    label: string;
+    value: number;
+    description: string;
+}) {
+    return (
+        <div className="rounded-2xl border border-black/[0.06] bg-white p-5 shadow-[0_6px_25px_rgba(0,0,0,0.025)]">
+            <p className="text-xs font-medium text-black/40">
+                {label}
+            </p>
+
+            <p className="mt-2 text-3xl font-semibold tracking-[-0.05em]">
+                {value}
+            </p>
+
+            <p className="mt-1 text-[11px] text-black/30">
+                {description}
+            </p>
+        </div>
+    );
+}
+
+function DataCard({
+    title,
+    description,
+    onViewAll,
+    children,
+}: {
+    title: string;
+    description: string;
+    onViewAll: () => void;
+    children: React.ReactNode;
+}) {
+    return (
+        <section className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-[0_6px_25px_rgba(0,0,0,0.025)]">
+            <div className="flex items-center justify-between border-b border-black/[0.05] px-5 py-4">
+                <div>
+                    <h3 className="text-sm font-semibold">
+                        {title}
+                    </h3>
+
+                    <p className="mt-0.5 text-[11px] text-black/35">
+                        {description}
+                    </p>
+                </div>
+
+                <button
+                    onClick={onViewAll}
+                    className="text-xs font-semibold text-[#315CFF] hover:underline"
+                >
+                    View all
+                </button>
+            </div>
+
+            {children}
+        </section>
+    );
+}
+
+function EmptyState({ text }: { text: string }) {
+    return (
+        <div className="px-5 py-12 text-center text-sm text-black/35">
+            {text}
+        </div>
+    );
 }
