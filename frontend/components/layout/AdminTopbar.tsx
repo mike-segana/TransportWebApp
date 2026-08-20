@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-export default function TopBar({
+export default function AdminTopBar({
     sidebarOpen,
     onToggleSidebar,
 }: {
@@ -84,16 +84,16 @@ export default function TopBar({
                 <div className="flex items-center gap-2.5">
                     <div className="hidden text-right sm:block">
                         <p className="text-xs font-semibold text-[#171A1F]">
-                            User
+                            Administrator
                         </p>
 
                         <p className="text-[10px] text-black/35">
-                            Customer
+                            Operations Portal
                         </p>
                     </div>
 
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#171A1F] text-xs font-bold text-white">
-                        U
+                        A
                     </div>
                 </div>
             </div>

@@ -82,3 +82,10 @@ async def login(
     token = create_access_token(user.id, timedelta(minutes=20))
 
     return {"access_token": token, "token_type": "bearer"}
+
+@router.get('/me')
+async def get_user(user: user_dependency, db: db_dependency):
+    user = db.query(User).filter(User.id == user["id"]).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return {"id": user.id, "username": user.username, "role": user.role.value}

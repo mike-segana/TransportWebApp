@@ -29,7 +29,18 @@ export default function LoginPage() {
                 body: formData,
             });
             if (res.ok) {
-                router.push("/dashboard");
+                const userRes = await fetch("/api/backend/auth/me");
+                console.log(userRes);
+                if (!userRes.ok) {
+                    alert("Could not retrieve user information");
+                    return;
+                }
+                const user = await userRes.json();
+                if (user.role === "admin") {
+                    router.push("/admin");
+                } else {
+                    router.push("/dashboard");
+                }
             } else {
                 alert("Invalid username or password.");
             }
