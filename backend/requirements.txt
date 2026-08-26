@@ -9,5 +9,5 @@ python-multipart
 psycopg2-binary
 alembic
 email-validator
-pytest httpx
+pytest
 httpx2
