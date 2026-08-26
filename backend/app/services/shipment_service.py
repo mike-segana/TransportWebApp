@@ -18,10 +18,10 @@ def create_shipment(db: Session, user_id: int, data):
     return shipment
 
 def get_user_shipments(db: Session, user_id: int):
-    return db.query(Shipment).filter(Shipment.user_id == user_id).all()
+    return db.query(Shipment).filter(Shipment.user_id == user_id).order_by(Shipment.created_at.desc()).all()
 
 def get_all_shipments(db: Session):
-    return db.query(Shipment).all()
+    return db.query(Shipment).order_by(Shipment.created_at.desc()).all()
 
 def start_transit(db: Session, shipment_id: int):
     shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
@@ -48,11 +48,15 @@ def start_transit(db: Session, shipment_id: int):
         )
     shipment.status = Status.IN_TRANSIT
     driver.availability = Availability.ON_TRIP
-    db.commit()
-    db.refresh(shipment)
-    db.refresh(driver)
-
+    try:
+        db.commit()
+        db.refresh(shipment)
+        db.refresh(driver)
+    except Exception:
+        db.rollback()
+        raise
     return shipment
+
 
 def end_transit(db: Session, shipment_id: int):
     shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
@@ -90,8 +94,3 @@ def end_transit(db: Session, shipment_id: int):
         db.refresh(driver)
 
         return shipment
-    
-#functions
-#create request
-#view my requests
-#get all 

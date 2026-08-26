@@ -135,7 +135,7 @@ export default function AdminDashboard() {
                     label="Pending requests"
                     value={pendingRequests.length}
                     description="Awaiting admin review"
-                    accent
+                    //accent
                 />
 
                 <StatCard

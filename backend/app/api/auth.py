@@ -1,14 +1,14 @@
 from datetime import timedelta, datetime, timezone
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Response
-from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 from dotenv import load_dotenv
 import os
-from app.models.user import User
+from app.models.user import User, Role
 from app.dependencies.db import db_dependency, bcrypt_context, user_dependency
 from app.schemas.auth import UserCreateRequest, Token
+from sqlalchemy.exc import IntegrityError
 
 #file for authentication related endpoints
 #file to hande authentication for the app: creating users, logging in existing user and generating JWT access tokens
@@ -40,7 +40,6 @@ def authenticate_user(username: str, password: str, db):
 #def create_access_token(username: str, user_id: int, expires_delta: timedelta):
 def create_access_token(user_id: int, expires_delta: timedelta):
     #encode: data stored inside JWT, sub: main user identifier (standard field), id: extra custom data
-    #encode = {'sub': username, 'id': user_id}
     encode = {'sub': str(user_id), 'id': user_id}
     expires = datetime.now(timezone.utc) + expires_delta
     encode.update({'exp': expires})
@@ -50,22 +49,30 @@ def create_access_token(user_id: int, expires_delta: timedelta):
 #receives username and password, hashes password with bcrypt.. and stores new User in db and commits the DB transaction
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency, create_user_request: UserCreateRequest):
-    existing = db.query(User).filter(User.username == create_user_request.username).first()
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username already exists"
-        )
-    create_user_model = User(
+    existing_username = (db.query(User).filter(User.username == create_user_request.username).first())
+    if existing_username:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already exists")
+    existing_email = (db.query(User).filter(User.email == create_user_request.email).first())
+    if existing_email:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use")
+    #Every publically registered account is a normal USER
+    user = User(
+        first_name=create_user_request.first_name,
+        last_name=create_user_request.last_name,
+        email=create_user_request.email,
         username=create_user_request.username,
-        hashed_password=bcrypt_context.hash(create_user_request.password)
+        hashed_password=bcrypt_context.hash(create_user_request.password),
+        role=Role.USER
     )
-    db.add(create_user_model)
-    db.commit()
-    db.refresh(create_user_model)
+    db.add(user)
+    try:
+        db.commit()
+        db.refresh(user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username or email already in use")
 
-    return {"message": "User created successfully", "user_id": create_user_model.id, "username": create_user_model.username}
-
+    return {"message": "User created successfully", "user_id": user.id, "username": user.username}
 
 @router.post('/token')
 async def login(
@@ -77,7 +84,8 @@ async def login(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate user"
+            detail="Could not validate user",
+            headers={"WWW-Authenticate": "Bearer"}
         )
     token = create_access_token(user.id, timedelta(minutes=20))
 
@@ -88,4 +96,4 @@ async def get_user(user: user_dependency, db: db_dependency):
     user = db.query(User).filter(User.id == user["id"]).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return {"id": user.id, "username": user.username, "role": user.role.value}
+    return {"id": user.id, "first_name": user.first_name, "last_name": user.last_name, "email": user.email, "username": user.username, "role": user.role.value}

@@ -1,6 +1,6 @@
 import enum
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Enum, Boolean, Date, ForeignKey
-from datetime import datetime, timezone, date
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Enum, Boolean, Date
+from datetime import datetime, timezone
 from app.core.database import Base
 
 class RequestStatus(enum.Enum):
@@ -29,24 +29,24 @@ class Request(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    pickup_location = Column(String, nullable=False)
-    dropoff_location = Column(String, nullable=False)
+    #pickup_location = Column(String, nullable=False)
+    #dropoff_location = Column(String, nullable=False)
+    pickup_address = Column(String(255), nullable=False)
+    pickup_postcode = Column(String(12), nullable=False)
+    dropoff_address = Column(String(255), nullable=False)
+    dropoff_postcode = Column(String(12), nullable=False)
 
-    pickup_date = Column(Date, nullable=True)
-    pickup_time_slot = Column(Enum(PickupTimeSlot, name="pickup_time_slot_enum"),nullable=True)
-    pickup_address = Column(String, nullable=True)
-    pickup_postcode = Column(String, nullable=True)
-    dropoff_address = Column(String, nullable=True)
-    dropoff_postcode = Column(String, nullable=True)
+    pickup_date = Column(Date, nullable=False)
+    pickup_time_slot = Column(Enum(PickupTimeSlot, name="pickup_time_slot_enum"),nullable=False)
     
-    helpers_needed = Column(Integer,nullable=True)
-    pickup_floor = Column(Integer, nullable=True)
-    pickup_has_lift = Column(Boolean, nullable=True)
-    dropoff_floor = Column(Integer, nullable=True)
-    dropoff_has_lift = Column(Boolean, nullable=True)
+    helpers_needed = Column(Integer,nullable=False)
+    pickup_floor = Column(Integer, nullable=False)
+    pickup_has_lift = Column(Boolean, nullable=False, server_default="false")
+    dropoff_floor = Column(Integer, nullable=False)
+    dropoff_has_lift = Column(Boolean, nullable=False, server_default="false")
 
-    pickup_loading_minutes = Column(Integer, nullable=True)
-    dropoff_loading_minutes = Column(Integer, nullable=True)
+    pickup_loading_minutes = Column(Integer, nullable=False)
+    dropoff_loading_minutes = Column(Integer, nullable=False)
 
     request_status = Column(Enum(RequestStatus, name="request_enum"), nullable=False, default=RequestStatus.PENDING)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

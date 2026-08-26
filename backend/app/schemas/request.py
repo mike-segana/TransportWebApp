@@ -1,68 +1,57 @@
 from datetime import date
-
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel, Field, ConfigDict
 from app.models.request import PickupTimeSlot, RequestStatus
 
 
 class RequestCreate(BaseModel):
-    pickup_location: str
-    dropoff_location: str
+    pickup_address: str = Field(max_length=255)
+    pickup_postcode: str = Field(max_length=12)
 
-    pickup_date: date | None = None
-    pickup_time_slot: PickupTimeSlot | None = None
+    dropoff_address: str = Field(max_length=255)
+    dropoff_postcode: str = Field(max_length=12)
 
-    pickup_address: str | None = None
-    pickup_postcode: str | None = None
+    pickup_date: date
+    pickup_time_slot: PickupTimeSlot
 
-    dropoff_address: str | None = None
-    dropoff_postcode: str | None = None
+    helpers_needed: int = Field(ge=0)
 
-    helpers_needed: int | None = Field(default=None, ge=0)
+    pickup_floor: int = Field(ge=0)
+    pickup_has_lift: bool = False
 
-    pickup_floor: int | None = Field(default=None, ge=0)
-    pickup_has_lift: bool | None = None
+    dropoff_floor: int = Field(ge=0)
+    dropoff_has_lift: bool = False
 
-    dropoff_floor: int | None = Field(default=None, ge=0)
-    dropoff_has_lift: bool | None = None
-
-    pickup_loading_minutes: int | None = Field(
-        default=None,
-        ge=0,
-    )
-
-    dropoff_loading_minutes: int | None = Field(
-        default=None,
-        ge=0,
-    )
+    pickup_loading_minutes: int = Field(ge=0)
+    dropoff_loading_minutes: int = Field(ge=0)
 
 
 class RequestResponse(BaseModel):
     id: int
-    pickup_location: str
-    dropoff_location: str
+    user_id: int
 
-    pickup_date: date | None = None
-    pickup_time_slot: PickupTimeSlot | None = None
+    pickup_address: str
+    pickup_postcode: str
 
-    pickup_address: str | None = None
-    pickup_postcode: str | None = None
+    dropoff_address: str
+    dropoff_postcode: str
 
-    dropoff_address: str | None = None
-    dropoff_postcode: str | None = None
+    pickup_date: date
+    pickup_time_slot: PickupTimeSlot
 
-    helpers_needed: int | None = None
+    helpers_needed: int
 
-    pickup_floor: int | None = None
-    pickup_has_lift: bool | None = None
+    pickup_floor: int
+    pickup_has_lift: bool
 
-    dropoff_floor: int | None = None
-    dropoff_has_lift: bool | None = None
+    dropoff_floor: int
+    dropoff_has_lift: bool
 
-    pickup_loading_minutes: int | None = None
-    dropoff_loading_minutes: int | None = None
+    pickup_loading_minutes: int
+    dropoff_loading_minutes: int
 
     request_status: RequestStatus
 
-    class Config:
-        from_attributes = True
+    #deprecated
+    #class Config:
+    #    from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

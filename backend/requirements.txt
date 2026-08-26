@@ -8,3 +8,6 @@ python-dotenv
 python-multipart
 psycopg2-binary
 alembic
+email-validator
+pytest httpx
+httpx2

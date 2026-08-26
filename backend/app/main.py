@@ -10,7 +10,8 @@ URL = os.getenv('API_URL')
 #creates main application object - all endpoints (routes) must attach to this app directly or indirectly
 app = FastAPI()
 
-Base.metadata.create_all(bind=engine)
+#Base.metadata.create_all(bind=engine)
+
 #middleware
 #prevent cors erros that may arise from frontend
 #allows frontend url to make requests to the backend

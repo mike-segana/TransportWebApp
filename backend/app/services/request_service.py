@@ -2,19 +2,18 @@ from sqlalchemy.orm import Session
 from app.models.user import User, Role
 from app.models.request import Request, RequestStatus
 from app.services.shipment_service import create_shipment
-from app.schemas.shipment import ShipmentCreate
+from app.models.shipment import Shipment, Status
 from fastapi import HTTPException, status
 
 def create_request(db: Session, user_id: int, data):
     request = Request(
         user_id=user_id,
-        pickup_location=data.pickup_location,
-        dropoff_location=data.dropoff_location,
         pickup_date=data.pickup_date,
         pickup_time_slot=data.pickup_time_slot,
 
         pickup_address=data.pickup_address,
         pickup_postcode=data.pickup_postcode,
+
         dropoff_address=data.dropoff_address,
         dropoff_postcode=data.dropoff_postcode,
 
@@ -28,19 +27,25 @@ def create_request(db: Session, user_id: int, data):
         dropoff_loading_minutes=data.dropoff_loading_minutes,
         request_status=RequestStatus.PENDING,
     )
-    db.add(request)
-    db.commit()
-    db.refresh(request)
+
+    try:
+        db.add(request)
+        db.commit()
+        db.refresh(request)
+    except Exception:
+        db.rollback()
+        raise
+
     return request
 
 def user_view_requests(db: Session, user_id: int):
-    return db.query(Request).filter(Request.user_id == user_id).all()
+    return db.query(Request).filter(Request.user_id == user_id).order_by(Request.created_at.desc()).all()
 
 #if request pending, user can delete request
 #def user_manage_request
 
 def view_all_requests(db: Session):
-    return db.query(Request).all()
+    return db.query(Request).order_by(Request.created_at.desc()).all()
 
 def approve_request(db: Session, request_id: int):
     request = db.query(Request).filter(Request.id == request_id).first()
@@ -54,13 +59,34 @@ def approve_request(db: Session, request_id: int):
             status_code=status.HTTP_409_CONFLICT,
             detail="Only pending requests can be approved"
         )
-    shipment_data = ShipmentCreate(
-        pickup_location = request.pickup_location,
-        dropoff_location = request.dropoff_location
+    shipment = Shipment(
+        request_id=request.id,
+        user_id=request.user_id,
+
+        pickup_address=request.pickup_address,
+        pickup_postcode=request.pickup_postcode,
+
+        dropoff_address=request.dropoff_address,
+        dropoff_postcode=request.dropoff_postcode,
+
+        scheduled_date=request.pickup_date,
+
+        pickup_loading_minutes=request.pickup_loading_minutes,
+        dropoff_loading_minutes=request.dropoff_loading_minutes,
+
+        status=Status.PENDING,
     )
-    shipment = create_shipment(db, request.user_id, shipment_data)
+
     request.request_status = RequestStatus.ACCEPTED
-    db.commit()
+
+    try:
+        db.add(shipment)
+        #Both operations succeed or neither does.
+        db.commit()
+        db.refresh(shipment)
+    except Exception:
+        db.rollback()
+        raise
     return shipment
 
 def deny_request(db: Session, request_id: int):
@@ -77,6 +103,10 @@ def deny_request(db: Session, request_id: int):
         )
 
     request.request_status = RequestStatus.DENIED
-    db.commit()
-    db.refresh(request)
+    try:
+        db.commit()
+        db.refresh(request)
+    except Exception:
+        db.rollback()
+        raise
     return request

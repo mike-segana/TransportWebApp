@@ -1,16 +1,29 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.models.driver import Driver, Availability
+from app.schemas.driver import DriverCreate, DriverUpdate
 
-def add_driver(db: Session, data):
+def add_driver(db: Session, data: DriverCreate):
+    existing_mail = db.query(Driver).filter(Driver.email == data.email).first()
+    if existing_mail:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Driver email already in use")
+    existing_username = db.query(Driver).filter(Driver.username == data.username).first()
+    if existing_username:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Driver username already in use")
     driver = Driver(
-        name = data.name,
-        availability = Availability.AVAILABLE
+        first_name=data.first_name,
+        last_name=data.last_name,
+        email=data.email,
+        username=data.username,
+        availability=Availability.AVAILABLE
     )
-    db.add(driver)
-    db.commit()
-    db.refresh(driver)
-    #return sends created driver back to API as response
+    try:
+        db.add(driver)
+        db.commit()
+        db.refresh(driver)
+    except Exception:
+        db.rollback()
+        raise
     return driver
 
 def get_drivers(db: Session):
