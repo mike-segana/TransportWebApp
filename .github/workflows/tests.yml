@@ -1,0 +1,59 @@
+name: Backend Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+#Gives workflow the minimum repository permission it needs
+permissions:
+  contents: read
+
+jobs:
+  test:
+    #runs test job on a temporary github hosted ubuntu machine
+    runs-on: ubuntu-latest
+    #starts services required by the tests
+    services:
+      #temp postgresql db used only during CI
+      postgres:
+        image: postgres:16
+        #fake credentials for disposable test database
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: transitflow_testing
+        ports:
+          - 5432:5432
+        #waits until postgresql is ready before running tests
+        options: >-
+          --health-cmd="pg_isready -U postgres -d transitflow_testing"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    #runs shell commands from backend directory by default
+    defaults:
+      run:
+        working-directory: backend
+    #steps executed in order
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/transitflow_testing
+          TEST_SECRET_KEY: ci-only-test-secret
+          TEST_AUTH_ALGORITHM: HS256
+        run: pytest -v
