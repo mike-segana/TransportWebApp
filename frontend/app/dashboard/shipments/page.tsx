@@ -139,11 +139,11 @@ export default function Shipments() {
                                             </td>
 
                                             <td className="px-6 py-4 text-black/60">
-                                                {shipment.pickup_location}
+                                                {shipment.pickup_address}
                                             </td>
 
                                             <td className="px-6 py-4 text-black/60">
-                                                {shipment.dropoff_location}
+                                                {shipment.dropoff_address}
                                             </td>
 
                                             <td className="px-6 py-4 text-black/45">

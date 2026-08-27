@@ -521,15 +521,15 @@ export default function AdminRequestsPage() {
                                     </th>
 
                                     <th className="px-5 py-3 font-semibold">
-                                        Route
-                                    </th>
-
-                                    <th className="px-5 py-3 font-semibold">
-                                        Distance
-                                    </th>
-
-                                    <th className="px-5 py-3 font-semibold">
                                         Pickup
+                                    </th>
+
+                                    <th className="px-5 py-3 font-semibold">
+                                        Dropoff
+                                    </th>
+
+                                    <th className="px-5 py-3 font-semibold">
+                                        Date
                                     </th>
 
                                     <th className="px-5 py-3 font-semibold">
@@ -605,30 +605,23 @@ export default function AdminRequestsPage() {
                                                 <td className="px-5 py-3.5">
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
-                                                            setSelectedRequest(
-                                                                request
-                                                            )
-                                                        }
+                                                        onClick={() =>setSelectedRequest(request)}
                                                         className="block max-w-[280px] truncate text-left text-black/60 hover:text-black"
-                                                        title={`${request.pickup_location} → ${request.dropoff_location}`}
+                                                        title={`${request.pickup_address}`}
                                                     >
-                                                        {
-                                                            request.pickup_location
-                                                        }{" "}
-                                                        →{" "}
-                                                        {
-                                                            request.dropoff_location
-                                                        }
+                                                        {request.pickup_address}
                                                     </button>
                                                 </td>
 
-                                                {/* Distance */}
-                                                <td className="px-5 py-3.5 text-black/50">
-                                                    {request.distance_miles !=
-                                                    null
-                                                        ? `${request.distance_miles} mi`
-                                                        : "—"}
+                                                <td className="px-5 py-3.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>setSelectedRequest(request)}
+                                                        className="block max-w-[280px] truncate text-left text-black/60 hover:text-black"
+                                                        title={`${request.dropoff_address}`}
+                                                    >
+                                                        {request.dropoff_address}
+                                                    </button>
                                                 </td>
 
                                                 {/* Pickup */}

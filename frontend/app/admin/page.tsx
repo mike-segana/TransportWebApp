@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 
 type Request = {
     id: number;
-    pickup_location: string;
-    dropoff_location: string;
+    pickup_address: string;
+    dropoff_address: string;
     request_status: string;
     pickup_date?: string | null;
     pickup_time_slot?: string | null;
@@ -15,8 +15,8 @@ type Request = {
 
 type Shipment = {
     id: number;
-    pickup_location: string;
-    dropoff_location: string;
+    pickup_address: string;
+    dropoff_address: string;
     status: string;
 };
 
@@ -182,11 +182,15 @@ export default function AdminDashboard() {
                                         </th>
 
                                         <th className="px-5 py-2.5 font-semibold">
-                                            Route
+                                            Pickup
                                         </th>
 
                                         <th className="px-5 py-2.5 font-semibold">
-                                            Pickup
+                                            Dropoff
+                                        </th>
+
+                                        <th className="px-5 py-2.5 font-semibold">
+                                            Date
                                         </th>
 
                                         <th className="px-5 py-2.5 font-semibold">
@@ -212,11 +216,15 @@ export default function AdminDashboard() {
                                                 <td className="px-5 py-3">
                                                     <div className="max-w-[300px] truncate text-black/60">
                                                         {
-                                                            request.pickup_location
-                                                        }{" "}
-                                                        →{" "}
+                                                            request.pickup_address
+                                                        }
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-5 py-3">
+                                                    <div className="max-w-[300px] truncate text-black/60">
                                                         {
-                                                            request.dropoff_location
+                                                            request.dropoff_address
                                                         }
                                                     </div>
                                                 </td>
@@ -341,11 +349,11 @@ export default function AdminDashboard() {
                                             </td>
 
                                             <td className="max-w-[260px] truncate px-5 py-3 text-black/55">
-                                                {shipment.pickup_location}
+                                                {shipment.pickup_address}
                                             </td>
 
                                             <td className="max-w-[260px] truncate px-5 py-3 text-black/55">
-                                                {shipment.dropoff_location}
+                                                {shipment.dropoff_address}
                                             </td>
 
                                             <td className="px-5 py-3">

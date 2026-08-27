@@ -6,15 +6,15 @@ import { useRouter } from "next/navigation";
 
 type Shipment = {
     id: number;
-    pickup_location: string;
-    dropoff_location: string;
+    pickup_address: string;
+    dropoff_address: string;
     status: string;
 };
 
 type Request = {
     id: number;
-    pickup_location: string;
-    dropoff_location: string;
+    pickup_address: string;
+    dropoff_address: string;
     request_status: string;
 };
 
@@ -192,11 +192,11 @@ export default function Dashboard() {
                                             </td>
 
                                             <td className="max-w-[140px] truncate px-4 py-3 text-black/60">
-                                                {shipment.pickup_location}
+                                                {shipment.pickup_address}
                                             </td>
 
                                             <td className="max-w-[140px] truncate px-4 py-3 text-black/60">
-                                                {shipment.dropoff_location}
+                                                {shipment.dropoff_address}
                                             </td>
 
                                             <td className="px-4 py-3">
@@ -260,11 +260,11 @@ export default function Dashboard() {
                                             </td>
 
                                             <td className="max-w-[140px] truncate px-4 py-3 text-black/60">
-                                                {request.pickup_location}
+                                                {request.pickup_address}
                                             </td>
 
                                             <td className="max-w-[140px] truncate px-4 py-3 text-black/60">
-                                                {request.dropoff_location}
+                                                {request.dropoff_address}
                                             </td>
 
                                             <td className="px-4 py-3">

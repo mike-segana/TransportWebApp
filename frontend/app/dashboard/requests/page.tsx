@@ -144,11 +144,11 @@ export default function Requests() {
                                             </td>
 
                                             <td className="px-6 py-4 text-black/60">
-                                                {request.pickup_location}
+                                                {request.pickup_address}
                                             </td>
 
                                             <td className="px-6 py-4 text-black/60">
-                                                {request.dropoff_location}
+                                                {request.dropoff_address}
                                             </td>
 
                                             <td className="px-6 py-4 text-black/45">

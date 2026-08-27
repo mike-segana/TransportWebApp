@@ -6,14 +6,12 @@ import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 type FormState = {
-    pickup_location: string;
-    dropoff_location: string;
-    pickup_date: string;
-    pickup_time_slot: string;
     pickup_address: string;
     pickup_postcode: string;
     dropoff_address: string;
     dropoff_postcode: string;
+    pickup_date: string;
+    pickup_time_slot: string;
     helpers_needed: string;
     pickup_floor: string;
     pickup_has_lift: boolean;
@@ -32,14 +30,12 @@ export default function CreateRequest() {
     const [error, setError] = useState("");
  
     const [form, setForm] = useState<FormState>({
-        pickup_location: "",
-        dropoff_location: "",
-        pickup_date: "",
-        pickup_time_slot: "",
         pickup_address: "",
         pickup_postcode: "",
         dropoff_address: "",
         dropoff_postcode: "",
+        pickup_date: "",
+        pickup_time_slot: "",
         helpers_needed: "",
         pickup_floor: "",
         pickup_has_lift: false,
@@ -89,18 +85,15 @@ export default function CreateRequest() {
  
         try {
             const payload = {
-                pickup_location: form.pickup_location,
-                dropoff_location: form.dropoff_location,
- 
-                pickup_date: form.pickup_date || null,
-                pickup_time_slot: form.pickup_time_slot || null,
- 
                 pickup_address: form.pickup_address || null,
                 pickup_postcode: form.pickup_postcode || null,
  
                 dropoff_address: form.dropoff_address || null,
                 dropoff_postcode: form.dropoff_postcode || null,
  
+                pickup_date: form.pickup_date || null,
+                pickup_time_slot: form.pickup_time_slot || null,
+
                 helpers_needed:
                     form.helpers_needed === ""
                         ? null
@@ -227,46 +220,6 @@ export default function CreateRequest() {
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
                             <label className={labelClass}>
-                                Pickup Location
-                            </label>
- 
-                            <input
-                                type="text"
-                                value={form.pickup_location}
-                                onChange={(e) =>
-                                    updateField(
-                                        "pickup_location",
-                                        e.target.value
-                                    )
-                                }
-                                placeholder="e.g. London"
-                                className={inputClass}
-                                required
-                            />
-                        </div>
- 
-                        <div>
-                            <label className={labelClass}>
-                                Drop-off Location
-                            </label>
- 
-                            <input
-                                type="text"
-                                value={form.dropoff_location}
-                                onChange={(e) =>
-                                    updateField(
-                                        "dropoff_location",
-                                        e.target.value
-                                    )
-                                }
-                                placeholder="e.g. Manchester"
-                                className={inputClass}
-                                required
-                            />
-                        </div>
- 
-                        <div>
-                            <label className={labelClass}>
                                 Pickup Address
                             </label>
  
@@ -281,25 +234,7 @@ export default function CreateRequest() {
                                 }
                                 placeholder="Full pickup address"
                                 className={inputClass}
-                            />
-                        </div>
- 
-                        <div>
-                            <label className={labelClass}>
-                                Pickup Postcode
-                            </label>
- 
-                            <input
-                                type="text"
-                                value={form.pickup_postcode}
-                                onChange={(e) =>
-                                    updateField(
-                                        "pickup_postcode",
-                                        e.target.value.toUpperCase()
-                                    )
-                                }
-                                placeholder="e.g. SW1A 1AA"
-                                className={inputClass}
+                                required
                             />
                         </div>
  
@@ -318,6 +253,26 @@ export default function CreateRequest() {
                                     )
                                 }
                                 placeholder="Full drop-off address"
+                                className={inputClass}
+                                required
+                            />
+                        </div>
+ 
+                        <div>
+                            <label className={labelClass}>
+                                Pickup Postcode
+                            </label>
+ 
+                            <input
+                                type="text"
+                                value={form.pickup_postcode}
+                                onChange={(e) =>
+                                    updateField(
+                                        "pickup_postcode",
+                                        e.target.value.toUpperCase()
+                                    )
+                                }
+                                placeholder="e.g. SW1A 1AA"
                                 className={inputClass}
                             />
                         </div>
