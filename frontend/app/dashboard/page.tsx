@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -52,10 +53,12 @@ export default function Dashboard() {
 
                 setShipments(shipmentsRes.data);
                 setRequests(requestsRes.data);
-            } catch (err: any) {
-                if (err.response?.status === 401) {
+            } catch (error: unknown) {
+                if (axios.isAxiosError(error) && error.response?.status === 401) {
                     router.replace("/login");
+                    return;
                 }
+                console.error("Failed to load admin dashboard:", error);
             } finally {
                 setLoading(false);
             }
@@ -108,7 +111,7 @@ export default function Dashboard() {
                     </h2>
 
                     <p className="mt-1 text-sm text-black/40">
-                        Here's what's happening with your transport.
+                        Here&apos;s what&apos;s happening with your transport.
                     </p>
                 </div>
 

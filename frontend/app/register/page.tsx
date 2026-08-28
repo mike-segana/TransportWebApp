@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -26,8 +27,12 @@ export default function RegisterPage() {
             
             alert(res.data.message);
             router.push("/login");
-        } catch (err: any) {
-            alert(err.response?.data?.detail || "Registration failed");
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                alert(err.response?.data?.detail || "Registration failed");
+            } else {
+                alert("Registration failed");
+            }
         } finally {
             setLoading(false);
         }

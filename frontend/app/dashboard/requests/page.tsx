@@ -1,13 +1,22 @@
 "use client";
 
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
+type Request = {
+    id: number;
+    pickup_address: string;
+    dropoff_address: string;
+    pickup_date?: string | null,
+    request_status: string,
+};
+
 export default function Requests() {
     const router = useRouter();
 
-    const [requests, setRequests] = useState<any[]>([]);
+    const [requests, setRequests] = useState<Request[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -16,8 +25,8 @@ export default function Requests() {
             try {
                 const res = await api.get("/api/backend/requests/my");
                 setRequests(res.data);
-            } catch (err: any) {
-                if (err.response?.status === 401) {
+            } catch (error: unknown) {
+                if (axios.isAxiosError(error) && error.response?.status === 401) {
                     router.replace("/login");
                 } else {
                     setError("Unable to load your requests.");

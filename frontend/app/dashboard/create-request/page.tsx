@@ -1,5 +1,6 @@
 "use client"; //runs in browser as page uses useState, button clicks, form interactions, router navigation etc
 
+import axios from "axios";
 import { useEffect, useState} from "react"; //imports react state management
 import type { SyntheticEvent } from "react";
 import { api } from "@/lib/api";
@@ -53,8 +54,8 @@ export default function CreateRequest() {
                 );
  
                 setTimeSlots(response.data);
-            } catch (err: any) {
-                if (err.response?.status === 401) {
+            } catch (err: unknown) {
+                if (axios.isAxiosError(err) && err.response?.status === 401) {
                     router.replace("/login");
                 } else {
                     setError("Unable to load available pickup times.");
@@ -130,15 +131,24 @@ export default function CreateRequest() {
             );
  
             router.push("/dashboard/requests");
-        } catch (err: any) {
-            if (err.response?.status === 401) {
-                router.replace("/login");
-            } else if (err.response?.data?.detail) {
-                setError(
-                    typeof err.response.data.detail === "string"
-                        ? err.response.data.detail
-                        : "Please check the information entered."
-                );
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                if (err.response?.status === 401) {
+                    router.replace("/login");
+                    return;
+                }
+
+                if (err.response?.data?.detail) {
+                    setError(
+                        typeof err.response.data.detail === "string"
+                            ? err.response.data.detail
+                            : "Please check the information entered."
+                    );
+                } else {
+                    setError(
+                        "Failed to create request. Please try again."
+                    );
+                }
             } else {
                 setError(
                     "Failed to create request. Please try again."
