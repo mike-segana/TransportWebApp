@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -50,13 +51,14 @@ export default function AdminDashboard() {
                 setRequests(requestsResponse.data);
                 setShipments(shipmentsResponse.data);
                 setDrivers(driversResponse.data);
-            } catch (error: any) {
-                if (error.response?.status === 401) {
+
+            } catch (error: unknown) {
+                if (axios.isAxiosError(error) && error.response?.status === 401) {
                     router.replace("/login");
                     return;
                 }
-
                 console.error("Failed to load admin dashboard:", error);
+
             } finally {
                 setLoading(false);
             }

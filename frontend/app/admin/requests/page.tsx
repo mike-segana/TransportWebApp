@@ -1,11 +1,7 @@
 "use client";
 
-import {
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
@@ -43,15 +39,6 @@ type Request = {
     request_status: RequestStatus;
 };
 
-type ApiError = {
-    response?: {
-        status?: number;
-        data?: {
-            detail?: string;
-        };
-    };
-};
-
 type StatusFilter = "all" | RequestStatus;
 
 export default function AdminRequestsPage() {
@@ -75,7 +62,11 @@ export default function AdminRequestsPage() {
         useState("");
 
     const handleAuthError = useCallback(
-        (error: ApiError) => {
+        (error: unknown) => {
+            if (!axios.isAxiosError(error)) {
+                return false;
+            }
+
             const status = error.response?.status;
 
             if (status === 401) {
@@ -93,47 +84,68 @@ export default function AdminRequestsPage() {
         [router]
     );
 
-    const fetchRequests = useCallback(
-        async (showRefreshState = false) => {
-            try {
-                if (showRefreshState) {
-                    setRefreshing(true);
-                } else {
-                    setLoading(true);
+    const getErrorDetail = (error: unknown) => {
+        if (!axios.isAxiosError(error)) {
+            return null;
+        }
+
+        const detail = error.response?.data?.detail;
+
+        return typeof detail === "string"
+            ? detail
+            : null;
+    };
+
+    const fetchRequests = useCallback(async (): Promise<Request[]> => {
+        const response = await api.get(
+            "/api/backend/requests"
+        );
+
+        return Array.isArray(response.data)
+            ? (response.data as Request[])
+            : [];
+    }, []);
+
+    const syncRequests = useCallback(
+        (nextRequests: Request[]) => {
+            setRequests(nextRequests);
+
+            setSelectedRequest((current) => {
+                if (!current) {
+                    return null;
                 }
 
-                setError(null);
-
-                const response = await api.get(
-                    "/api/backend/requests"
+                return (
+                    nextRequests.find(
+                        (request) =>
+                            request.id === current.id
+                    ) ?? null
                 );
+            });
+        },
+        []
+    );
 
-                const nextRequests = Array.isArray(response.data)
-                    ? response.data
-                    : [];
+    useEffect(() => {
+        let cancelled = false;
 
-                setRequests(nextRequests);
+        const loadRequests = async () => {
+            try {
+                const nextRequests = await fetchRequests();
 
-                /*
-                 * Keep the currently open modal synchronized
-                 * with refreshed request data.
-                 */
-                setSelectedRequest((current) => {
-                    if (!current) {
-                        return null;
-                    }
+                if (cancelled) {
+                    return;
+                }
 
-                    return (
-                        nextRequests.find(
-                            (request: Request) =>
-                                request.id === current.id
-                        ) ?? null
-                    );
-                });
-            } catch (error) {
-                const apiError = error as ApiError;
+                syncRequests(nextRequests);
+                setLoading(false);
+            } catch (error: unknown) {
+                if (cancelled) {
+                    return;
+                }
 
-                if (handleAuthError(apiError)) {
+                if (handleAuthError(error)) {
+                    setLoading(false);
                     return;
                 }
 
@@ -143,20 +155,47 @@ export default function AdminRequestsPage() {
                 );
 
                 setError(
-                    apiError.response?.data?.detail ||
+                    getErrorDetail(error) ??
                         "Failed to load requests."
                 );
-            } finally {
-                setLoading(false);
-                setRefreshing(false);
-            }
-        },
-        [handleAuthError]
-    );
 
-    useEffect(() => {
-        fetchRequests();
-    }, [fetchRequests]);
+                setLoading(false);
+            }
+        };
+
+        void loadRequests();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [fetchRequests, handleAuthError, syncRequests]);
+
+    const refreshRequests = async () => {
+        setRefreshing(true);
+        setError(null);
+
+        try {
+            const nextRequests = await fetchRequests();
+
+            syncRequests(nextRequests);
+        } catch (error: unknown) {
+            if (handleAuthError(error)) {
+                return;
+            }
+
+            console.error(
+                "Failed to refresh requests:",
+                error
+            );
+
+            setError(
+                getErrorDetail(error) ??
+                    "Failed to refresh requests."
+            );
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     const approveRequest = async (requestId: number) => {
         try {
@@ -169,16 +208,17 @@ export default function AdminRequestsPage() {
 
             setSelectedRequest(null);
 
-            await fetchRequests();
-        } catch (error) {
-            const apiError = error as ApiError;
+            const nextRequests =
+                await fetchRequests();
 
-            if (handleAuthError(apiError)) {
+            syncRequests(nextRequests);
+        } catch (error: unknown) {
+            if (handleAuthError(error)) {
                 return;
             }
 
             setError(
-                apiError.response?.data?.detail ||
+                getErrorDetail(error) ??
                     "Failed to approve request."
             );
         } finally {
@@ -205,16 +245,17 @@ export default function AdminRequestsPage() {
 
             setSelectedRequest(null);
 
-            await fetchRequests();
-        } catch (error) {
-            const apiError = error as ApiError;
+            const nextRequests =
+                await fetchRequests();
 
-            if (handleAuthError(apiError)) {
+            syncRequests(nextRequests);
+        } catch (error: unknown) {
+            if (handleAuthError(error)) {
                 return;
             }
 
             setError(
-                apiError.response?.data?.detail ||
+                getErrorDetail(error) ??
                     "Failed to deny request."
             );
         } finally {
@@ -222,18 +263,6 @@ export default function AdminRequestsPage() {
         }
     };
 
-    /*
-     * Filter requests locally.
-     *
-     * This is only UI filtering.
-     *
-     * Security is still enforced by the backend:
-     * - /requests is protected by admin_dependency
-     * - approve is protected by admin_dependency
-     * - deny is protected by admin_dependency
-     *
-     * user_id is never used here to grant permissions.
-     */
     const filteredRequests = useMemo(() => {
         const normalizedUserId =
             userIdFilter.trim();
@@ -297,7 +326,6 @@ export default function AdminRequestsPage() {
 
     return (
         <div className="space-y-5">
-            {/* Header */}
             <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#315CFF]">
@@ -316,7 +344,7 @@ export default function AdminRequestsPage() {
 
                 <button
                     type="button"
-                    onClick={() => fetchRequests(true)}
+                    onClick={refreshRequests}
                     disabled={refreshing}
                     className="inline-flex h-9 items-center justify-center rounded-xl border border-black/[0.07] bg-white px-3.5 text-xs font-semibold text-black/60 shadow-sm transition hover:bg-black/[0.02] disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -326,7 +354,6 @@ export default function AdminRequestsPage() {
                 </button>
             </header>
 
-            {/* Summary */}
             <div className="grid gap-3 sm:grid-cols-3">
                 <SummaryCard
                     label="Pending"
@@ -345,7 +372,6 @@ export default function AdminRequestsPage() {
                 />
             </div>
 
-            {/* Error */}
             {error && (
                 <div
                     role="alert"
@@ -364,11 +390,9 @@ export default function AdminRequestsPage() {
                 </div>
             )}
 
-            {/* Filters */}
             <section className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_6px_25px_rgba(0,0,0,0.025)]">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                     <div className="grid gap-3 sm:grid-cols-2">
-                        {/* Status filter */}
                         <div>
                             <label
                                 htmlFor="request-status-filter"
@@ -406,7 +430,6 @@ export default function AdminRequestsPage() {
                             </select>
                         </div>
 
-                        {/* User filter */}
                         <div>
                             <label
                                 htmlFor="request-user-filter"
@@ -459,7 +482,6 @@ export default function AdminRequestsPage() {
                 </div>
             </section>
 
-            {/* Requests table */}
             <section className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-[0_6px_25px_rgba(0,0,0,0.025)]">
                 <div className="flex items-center justify-between border-b border-black/[0.05] px-5 py-4">
                     <div>
@@ -562,7 +584,6 @@ export default function AdminRequestsPage() {
                                                         : "border-l-2 border-l-transparent"
                                                 }`}
                                             >
-                                                {/* Request ID */}
                                                 <td className="px-5 py-3.5">
                                                     <button
                                                         type="button"
@@ -573,14 +594,10 @@ export default function AdminRequestsPage() {
                                                         }
                                                         className="text-left font-semibold text-black/80 hover:text-[#315CFF]"
                                                     >
-                                                        #
-                                                        {
-                                                            request.id
-                                                        }
+                                                        #{request.id}
                                                     </button>
                                                 </td>
 
-                                                {/* User ID */}
                                                 <td className="px-5 py-3.5">
                                                     <button
                                                         type="button"
@@ -595,36 +612,50 @@ export default function AdminRequestsPage() {
                                                         title="Filter by this user"
                                                     >
                                                         User #
+                                                        {request.user_id}
+                                                    </button>
+                                                </td>
+
+                                                <td className="px-5 py-3.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setSelectedRequest(
+                                                                request
+                                                            )
+                                                        }
+                                                        className="block max-w-[280px] truncate text-left text-black/60 hover:text-black"
+                                                        title={
+                                                            request.pickup_address ??
+                                                            ""
+                                                        }
+                                                    >
                                                         {
-                                                            request.user_id
+                                                            request.pickup_address
                                                         }
                                                     </button>
                                                 </td>
 
-                                                {/* Route */}
                                                 <td className="px-5 py-3.5">
                                                     <button
                                                         type="button"
-                                                        onClick={() =>setSelectedRequest(request)}
+                                                        onClick={() =>
+                                                            setSelectedRequest(
+                                                                request
+                                                            )
+                                                        }
                                                         className="block max-w-[280px] truncate text-left text-black/60 hover:text-black"
-                                                        title={`${request.pickup_address}`}
+                                                        title={
+                                                            request.dropoff_address ??
+                                                            ""
+                                                        }
                                                     >
-                                                        {request.pickup_address}
+                                                        {
+                                                            request.dropoff_address
+                                                        }
                                                     </button>
                                                 </td>
 
-                                                <td className="px-5 py-3.5">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>setSelectedRequest(request)}
-                                                        className="block max-w-[280px] truncate text-left text-black/60 hover:text-black"
-                                                        title={`${request.dropoff_address}`}
-                                                    >
-                                                        {request.dropoff_address}
-                                                    </button>
-                                                </td>
-
-                                                {/* Pickup */}
                                                 <td className="px-5 py-3.5">
                                                     <div className="text-black/60">
                                                         {formatDate(
@@ -641,7 +672,6 @@ export default function AdminRequestsPage() {
                                                     )}
                                                 </td>
 
-                                                {/* Status */}
                                                 <td className="px-5 py-3.5">
                                                     <StatusBadge
                                                         status={
@@ -650,7 +680,6 @@ export default function AdminRequestsPage() {
                                                     />
                                                 </td>
 
-                                                {/* Actions */}
                                                 <td className="px-5 py-3.5">
                                                     {pending ? (
                                                         <div className="flex justify-end gap-2">
@@ -702,7 +731,6 @@ export default function AdminRequestsPage() {
                 )}
             </section>
 
-            {/* Details modal */}
             {selectedRequest && (
                 <RequestDetails
                     request={selectedRequest}
@@ -783,7 +811,6 @@ function RequestDetails({
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 p-4 backdrop-blur-[2px]"
         >
             <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-2xl">
-                {/* Header */}
                 <div className="flex shrink-0 items-center justify-between border-b border-black/[0.05] px-5 py-4">
                     <div>
                         <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#315CFF]">
@@ -808,9 +835,7 @@ function RequestDetails({
                     </button>
                 </div>
 
-                {/* Content */}
                 <div className="overflow-y-auto p-5">
-                    {/* Request summary */}
                     <div className="mb-5 grid gap-3 sm:grid-cols-3">
                         <div className="rounded-xl bg-black/[0.025] px-4 py-3">
                             <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-black/30">
@@ -818,8 +843,7 @@ function RequestDetails({
                             </p>
 
                             <p className="mt-1 text-sm font-semibold text-black/70">
-                                User #
-                                {request.user_id}
+                                User #{request.user_id}
                             </p>
                         </div>
 
@@ -843,15 +867,13 @@ function RequestDetails({
                             </p>
 
                             <p className="mt-1 text-sm font-semibold text-black/70">
-                                {request.distance_miles !=
-                                null
+                                {request.distance_miles != null
                                     ? `${request.distance_miles} miles`
                                     : "—"}
                             </p>
                         </div>
                     </div>
 
-                    {/* Locations */}
                     <div className="grid gap-4 sm:grid-cols-2">
                         <DetailBlock
                             title="Pickup"
@@ -889,8 +911,7 @@ function RequestDetails({
                         <DetailItem
                             label="Helpers needed"
                             value={
-                                request.helpers_needed !=
-                                null
+                                request.helpers_needed != null
                                     ? String(
                                           request.helpers_needed
                                       )
@@ -936,7 +957,6 @@ function RequestDetails({
                     </div>
                 </div>
 
-                {/* Actions */}
                 {pending && (
                     <div className="flex shrink-0 justify-end gap-2 border-t border-black/[0.05] px-5 py-4">
                         <button

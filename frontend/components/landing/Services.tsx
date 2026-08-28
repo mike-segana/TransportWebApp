@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 const services = [
@@ -75,7 +76,7 @@ export default function Services() {
 
           <p className="max-w-md text-base leading-7 text-[#62666D] lg:ml-auto lg:pb-2">
             Different journeys need different solutions. Choose the service
-            that fits what you're moving, where it's going and when it needs
+            that fits what you&apos;re moving, where it&apos;s going and when it needs
             to arrive.
           </p>
         </div>
@@ -179,17 +180,19 @@ export default function Services() {
 
             {/* SERVICE IMAGES */}
             {services.map((service, index) => (
-              <img
+              <Image
                 key={service.number}
                 src={service.image}
                 alt={service.title}
-                loading={index === 0 ? "eager" : "lazy"}
-                className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ${
-                  index === active
-                    ? "scale-100 opacity-100"
-                    : "scale-105 opacity-0"
+                fill
+                priority={index === 0}
+                sizes="(min-width: 1024px) 65vw, 100vw"
+                className={`object-cover transition-all duration-700 ${
+                    index === active
+                        ? "scale-100 opacity-100"
+                        : "scale-105 opacity-0"
                 }`}
-              />
+            />
             ))}
 
             {/* DARK CINEMATIC GRADIENT */}

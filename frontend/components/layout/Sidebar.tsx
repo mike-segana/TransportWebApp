@@ -1,5 +1,6 @@
 "use client";
 
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { usePathname, useRouter } from "next/navigation";
 
 export default function SideBar({
@@ -11,6 +12,7 @@ export default function SideBar({
 }) {
     const router = useRouter();
     const pathname = usePathname();
+    const isMobile = useIsMobile();
 
     const handleLogout = async () => {
         await fetch("/api/auth/logout", {
@@ -55,7 +57,12 @@ export default function SideBar({
             {/* Brand */}
             <div className="flex h-[72px] shrink-0 items-center border-b border-black/[0.05] px-6">
                 <button
-                    onClick={() => router.push("/dashboard")}
+                    onClick={() => {
+                        router.push("/dashboard");
+                        if (isMobile) {
+                            onClose();
+                        }
+                    }}
                     className="flex items-center gap-3"
                 >
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#171A1F] text-sm font-bold text-white">
@@ -92,7 +99,12 @@ export default function SideBar({
                         return (
                             <button
                                 key={item.path}
-                                onClick={() => router.push(item.path)}
+                                onClick={() => {
+                                    router.push(item.path);
+                                    if (isMobile) {
+                                        onClose();
+                                    }
+                                }}
                                 className={`flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
                                     active
                                         ? "bg-[#315CFF]/[0.08] text-[#315CFF]"

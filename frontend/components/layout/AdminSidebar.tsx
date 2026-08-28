@@ -1,16 +1,20 @@
 "use client";
 
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { usePathname, useRouter } from "next/navigation";
 
 type AdminSidebarProps = {
     isOpen: boolean;
+    onClose: () => void;
 };
 
 export default function AdminSidebar({
     isOpen,
+    onClose,
 }: AdminSidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
+    const isMobile = useIsMobile();
 
     const navigation = [
         {
@@ -66,7 +70,12 @@ export default function AdminSidebar({
             {/* Brand */}
             <div className="flex h-[72px] shrink-0 items-center border-b border-black/[0.05] px-6">
                 <button
-                    onClick={() => router.push("/admin")}
+                    onClick={() => {
+                        router.push("/admin");
+                        if (isMobile) {
+                            onClose();
+                        }
+                    }}
                     className="flex items-center gap-3"
                 >
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#171A1F] text-sm font-bold text-white">
@@ -98,7 +107,12 @@ export default function AdminSidebar({
                         return (
                             <button
                                 key={item.href}
-                                onClick={() => router.push(item.href)}
+                                onClick={() => {
+                                    router.push(item.href);
+                                    if (isMobile) {
+                                        onClose();
+                                    }
+                                }}
                                 className={`flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
                                     active
                                         ? "bg-[#315CFF]/[0.08] text-[#315CFF]"
@@ -130,7 +144,12 @@ export default function AdminSidebar({
                         return (
                             <button
                                 key={item.href}
-                                onClick={() => router.push(item.href)}
+                                onClick={() => {
+                                    router.push(item.href);
+                                    if (isMobile) {
+                                        onClose();
+                                    }
+                                }}
                                 className={`flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
                                     active
                                         ? "bg-[#315CFF]/[0.08] text-[#315CFF]"

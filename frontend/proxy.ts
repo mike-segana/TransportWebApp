@@ -1,8 +1,9 @@
-//middleware runs before rendering to protect routes by checking for a valid access_token and user role
+//middleware proxy runs before rendering to protect routes by checking for a valid access_token and user role
+//request interception and auth protection
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const token = request.cookies.get("access_token")?.value;
 

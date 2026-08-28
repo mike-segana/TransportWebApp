@@ -1,13 +1,22 @@
 "use client";
 
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
+type Shipment = {
+    id: number;
+    pickup_address: string;
+    dropoff_address: string;
+    created_at?: string | null;
+    status: string;
+}
+
 export default function Shipments() {
     const router = useRouter();
 
-    const [shipments, setShipments] = useState<any[]>([]);
+    const [shipments, setShipments] = useState<Shipment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -16,8 +25,8 @@ export default function Shipments() {
             try {
                 const res = await api.get("/api/backend/shipments/my");
                 setShipments(res.data);
-            } catch (err: any) {
-                if (err.response?.status === 401) {
+            } catch (error: unknown) {
+                if (axios.isAxiosError(error) && error.response?.status === 401) {
                     router.replace("/login");
                 } else {
                     setError("Unable to load your shipments.");

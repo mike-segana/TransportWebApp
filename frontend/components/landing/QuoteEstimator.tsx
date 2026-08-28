@@ -181,11 +181,11 @@ export default function QuoteEstimator() {
             <h2 className="max-w-xl text-5xl font-semibold leading-[0.93] tracking-[-0.055em] sm:text-6xl lg:text-[5.25rem]">
               Tell us where
               <br />
-              <span className="text-[#155EEF]">you're going.</span>
+              <span className="text-[#155EEF]">you&apos;re going.</span>
             </h2>
 
             <p className="mt-8 max-w-lg text-base leading-7 text-[#475467] sm:text-lg">
-              Whether you're moving a few items across town or coordinating a
+              Whether you&apos;re moving a few items across town or coordinating a
               larger delivery across the country, TransitFlow helps you plan
               the right transport for the journey.
             </p>
