@@ -5,6 +5,7 @@ import { useEffect, useState} from "react"; //imports react state management
 import type { SyntheticEvent } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { requestSchema } from "@/lib/validation/request";
 
 type FormState = {
     pickup_address: string;
@@ -85,51 +86,32 @@ export default function CreateRequest() {
         setError("");
  
         try {
-            const payload = {
-                pickup_address: form.pickup_address || null,
-                pickup_postcode: form.pickup_postcode || null,
- 
-                dropoff_address: form.dropoff_address || null,
-                dropoff_postcode: form.dropoff_postcode || null,
- 
-                pickup_date: form.pickup_date || null,
-                pickup_time_slot: form.pickup_time_slot || null,
-
-                helpers_needed:
-                    form.helpers_needed === ""
-                        ? null
-                        : Number(form.helpers_needed),
- 
-                pickup_floor:
-                    form.pickup_floor === ""
-                        ? null
-                        : Number(form.pickup_floor),
- 
+            const result = requestSchema.safeParse({
+                pickup_address: form.pickup_address,
+                pickup_postcode: form.pickup_postcode,
+                dropoff_address: form.dropoff_address,
+                dropoff_postcode: form.dropoff_postcode,
+                pickup_date: form.pickup_date,
+                pickup_time_slot: form.pickup_time_slot,
+                helpers_needed: form.helpers_needed,
+                pickup_floor: form.pickup_floor,
                 pickup_has_lift: form.pickup_has_lift,
- 
-                dropoff_floor:
-                    form.dropoff_floor === ""
-                        ? null
-                        : Number(form.dropoff_floor),
- 
+                dropoff_floor: form.dropoff_floor,
                 dropoff_has_lift: form.dropoff_has_lift,
- 
-                pickup_loading_minutes:
-                    form.pickup_loading_minutes === ""
-                        ? null
-                        : Number(form.pickup_loading_minutes),
- 
-                dropoff_loading_minutes:
-                    form.dropoff_loading_minutes === ""
-                        ? null
-                        : Number(form.dropoff_loading_minutes),
-            };
- 
+                pickup_loading_minutes: form.pickup_loading_minutes,
+                dropoff_loading_minutes: form.dropoff_loading_minutes,
+            });
+
+            if (!result.success) {
+                setError(result.error.issues[0]?.message ?? "Please check the form.");
+                return;
+            }
+
             await api.post(
                 "/api/backend/requests/",
-                payload
+                result.data
             );
- 
+
             router.push("/dashboard/requests");
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
