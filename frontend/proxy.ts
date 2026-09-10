@@ -4,6 +4,42 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
+    const auth = request.headers.get("authorization");
+    if (!auth?.startsWith("Basic ")) {
+        return new NextResponse("Authentication required", {
+            status: 401,
+            headers: {
+                "WWW-Authenticate": 'Basic realm="TransitFlow"',
+            },
+        });
+    }
+
+    const encoded = auth.split(" ")[1];
+
+    let username = "";
+    let password = "";
+
+    try {
+        const decoded = atob(encoded);
+        [username, password] = decoded.split(":");
+    } catch {
+        return new NextResponse("Invalid authentication", {
+            status: 401,
+        });
+    }
+
+    if (
+        username !== process.env.SITE_USERNAME || password !== process.env.SITE_PASSWORD
+    ) {
+        return new NextResponse("Invalid credentials", {
+            status: 401,
+            headers: {
+                "WWW-Authenticate": 'Basic realm="TransitFlow"',
+            },
+        });
+    }
+
+    ///
     const { pathname } = request.nextUrl;
     const token = request.cookies.get("access_token")?.value;
 
@@ -55,6 +91,12 @@ export async function proxy(request: NextRequest) {
     }
 }
 
+//export const config = {
+//    matcher: ["/dashboard/:path*", "/admin/:path*"],
+//};
+
 export const config = {
-    matcher: ["/dashboard/:path*", "/admin/:path*"],
+    matcher: [
+        "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    ],
 };
