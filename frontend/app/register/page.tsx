@@ -1,42 +1,76 @@
 "use client";
 
+import { z } from "zod";
 import axios from "axios";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { registerSchema } from "@/lib/validation/register";
 import Link from "next/link";
 
+type FormState = z.infer<typeof registerSchema>;
+
 export default function RegisterPage() {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
     const router = useRouter();
 
+    const [form, setForm] = useState<FormState>({
+        first_name: "",
+        last_name: "",
+        email: "",
+        username: "",
+        password: "",
+    });
+
+    const updateField = <K extends keyof FormState>(
+        field: K,
+        value: FormState[K]
+    ) => {
+        setError("");
+
+        setForm((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+
     const handleRegister = async () => {
-        if (!username || !password) {
-            alert("Please enter a username and password.");
+        const result = registerSchema.safeParse(form);
+
+        if (!result.success) {
+            setError(
+                result.error.issues[0]?.message ??
+                    "Please check the form."
+            );
             return;
         }
+
         try {
             setLoading(true);
-            //await is an operator that pauses execution of async func until promsie resolves or rejects then returns the result, in this case once backend response received
-            const res = await api.post("/auth/", {
-                username,
-                password
-            });
-            
-            alert(res.data.message);
+            setError("");
+
+            await api.post("/api/backend/auth/", result.data);
+
             router.push("/login");
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
-                alert(err.response?.data?.detail || "Registration failed");
+                const detail = err.response?.data?.detail;
+
+                setError(
+                    typeof detail === "string"
+                        ? detail
+                        : "Registration failed"
+                );
             } else {
-                alert("Registration failed");
+                setError("Registration failed");
             }
         } finally {
             setLoading(false);
         }
     };
+
     return (
         <main className="relative min-h-screen overflow-hidden bg-[#F7F7F5]">
 
@@ -95,74 +129,176 @@ export default function RegisterPage() {
 
                     <div className="rounded-[28px] border border-black/[0.055] bg-white p-7 shadow-[0_25px_80px_rgba(0,0,0,0.07)] sm:p-9">
 
-                        <div className="space-y-5">
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                handleRegister();
+                            }}
+                        >
 
-                            {/* Username */}
+                            <div className="space-y-5">
 
-                            <div>
+                                {/* First Name */}
 
-                                <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-black/40">
-                                    Username
-                                </label>
+                                <div>
+                                    <label
+                                        htmlFor="first_name"
+                                        className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-black/40"
+                                    >
+                                        First Name
+                                    </label>
 
-                                <input
-                                    value={username}
-                                    onChange={(e) =>
-                                        setUsername(e.target.value)
-                                    }
-                                    placeholder="Choose a username"
-                                    autoComplete="username"
-                                    className="h-12 w-full rounded-xl border border-black/[0.08] bg-[#FAFAF9] px-4 text-sm text-[#171A1F] outline-none transition placeholder:text-black/25 focus:border-[#315CFF]/40 focus:bg-white focus:ring-4 focus:ring-[#315CFF]/[0.06]"
-                                />
-
-                            </div>
-
-                            {/* Password */}
-
-                            <div>
-
-                                <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-black/40">
-                                    Password
-                                </label>
-
-                                <input
-                                    value={password}
-                                    onChange={(e) =>
-                                        setPassword(e.target.value)
-                                    }
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            handleRegister();
+                                    <input
+                                        id="first_name"
+                                        type="text"
+                                        value={form.first_name}
+                                        onChange={(e) =>
+                                            updateField(
+                                                "first_name",
+                                                e.target.value
+                                            )
                                         }
-                                    }}
-                                    placeholder="Create a password"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    className="h-12 w-full rounded-xl border border-black/[0.08] bg-[#FAFAF9] px-4 text-sm text-[#171A1F] outline-none transition placeholder:text-black/25 focus:border-[#315CFF]/40 focus:bg-white focus:ring-4 focus:ring-[#315CFF]/[0.06]"
-                                />
+                                        placeholder="Enter your first name"
+                                        autoComplete="given-name"
+                                        className="h-12 w-full rounded-xl border border-black/[0.08] bg-[#FAFAF9] px-4 text-sm text-[#171A1F] outline-none transition placeholder:text-black/25 focus:border-[#315CFF]/40 focus:bg-white focus:ring-4 focus:ring-[#315CFF]/[0.06]"
+                                    />
+                                </div>
+
+                                {/* Last Name */}
+
+                                <div>
+                                    <label
+                                        htmlFor="last_name"
+                                        className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-black/40"
+                                    >
+                                        Last Name
+                                    </label>
+
+                                    <input
+                                        id="last_name"
+                                        type="text"
+                                        value={form.last_name}
+                                        onChange={(e) =>
+                                            updateField(
+                                                "last_name",
+                                                e.target.value
+                                            )
+                                        }
+                                        placeholder="Enter your last name"
+                                        autoComplete="family-name"
+                                        className="h-12 w-full rounded-xl border border-black/[0.08] bg-[#FAFAF9] px-4 text-sm text-[#171A1F] outline-none transition placeholder:text-black/25 focus:border-[#315CFF]/40 focus:bg-white focus:ring-4 focus:ring-[#315CFF]/[0.06]"
+                                    />
+                                </div>
+
+                                {/* Email */}
+
+                                <div>
+                                    <label
+                                        htmlFor="email"
+                                        className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-black/40"
+                                    >
+                                        Email
+                                    </label>
+
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        value={form.email}
+                                        onChange={(e) =>
+                                            updateField(
+                                                "email",
+                                                e.target.value
+                                            )
+                                        }
+                                        placeholder="Enter your email"
+                                        autoComplete="email"
+                                        className="h-12 w-full rounded-xl border border-black/[0.08] bg-[#FAFAF9] px-4 text-sm text-[#171A1F] outline-none transition placeholder:text-black/25 focus:border-[#315CFF]/40 focus:bg-white focus:ring-4 focus:ring-[#315CFF]/[0.06]"
+                                    />
+                                </div>
+
+                                {/* Username */}
+
+                                <div>
+                                    <label
+                                        htmlFor="username"
+                                        className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-black/40"
+                                    >
+                                        Username
+                                    </label>
+
+                                    <input
+                                        id="username"
+                                        type="text"
+                                        value={form.username}
+                                        onChange={(e) =>
+                                            updateField(
+                                                "username",
+                                                e.target.value
+                                            )
+                                        }
+                                        placeholder="Choose a username"
+                                        autoComplete="username"
+                                        className="h-12 w-full rounded-xl border border-black/[0.08] bg-[#FAFAF9] px-4 text-sm text-[#171A1F] outline-none transition placeholder:text-black/25 focus:border-[#315CFF]/40 focus:bg-white focus:ring-4 focus:ring-[#315CFF]/[0.06]"
+                                    />
+                                </div>
+
+                                {/* Password */}
+
+                                <div>
+                                    <label
+                                        htmlFor="password"
+                                        className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-black/40"
+                                    >
+                                        Password
+                                    </label>
+
+                                    <input
+                                        id="password"
+                                        type="password"
+                                        value={form.password}
+                                        onChange={(e) =>
+                                            updateField(
+                                                "password",
+                                                e.target.value
+                                            )
+                                        }
+                                        placeholder="Create a password"
+                                        autoComplete="new-password"
+                                        className="h-12 w-full rounded-xl border border-black/[0.08] bg-[#FAFAF9] px-4 text-sm text-[#171A1F] outline-none transition placeholder:text-black/25 focus:border-[#315CFF]/40 focus:bg-white focus:ring-4 focus:ring-[#315CFF]/[0.06]"
+                                    />
+                                </div>
+
+                                {/* Error */}
+
+                                {error && (
+                                    <p
+                                        role="alert"
+                                        className="text-sm text-red-500"
+                                    >
+                                        {error}
+                                    </p>
+                                )}
+
+                                {/* Register */}
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#315CFF] text-sm font-semibold text-white shadow-[0_10px_25px_rgba(49,92,255,0.18)] transition-all duration-300 hover:bg-[#416BFF] hover:shadow-[0_14px_30px_rgba(49,92,255,0.25)] disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    {loading
+                                        ? "Creating account..."
+                                        : "Create account"}
+
+                                    {!loading && (
+                                        <span className="transition-transform duration-300 group-hover:translate-x-1">
+                                            →
+                                        </span>
+                                    )}
+                                </button>
 
                             </div>
-
-                            {/* Register */}
-
-                            <button
-                                type="button"
-                                onClick={handleRegister}
-                                disabled={loading}
-                                className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#315CFF] text-sm font-semibold text-white shadow-[0_10px_25px_rgba(49,92,255,0.18)] transition-all duration-300 hover:bg-[#416BFF] hover:shadow-[0_14px_30px_rgba(49,92,255,0.25)] disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                {loading
-                                    ? "Creating account..."
-                                    : "Create account"}
-
-                                {!loading && (
-                                    <span className="transition-transform duration-300 group-hover:translate-x-1">
-                                        →
-                                    </span>
-                                )}
-                            </button>
-
-                        </div>
+                        </form>
 
                         {/* Divider */}
 
