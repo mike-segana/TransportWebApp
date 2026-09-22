@@ -198,6 +198,14 @@ export default function AdminRequestsPage() {
     };
 
     const approveRequest = async (requestId: number) => {
+        const confirmed = window.confirm(
+            "Are you sure you want to approve this request?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
         try {
             setProcessingId(requestId);
             setError(null);
