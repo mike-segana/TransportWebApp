@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import Base, engine
-from app.api import auth, drivers, shipments, assignment, requests
+from app.api import auth, drivers, shipments, assignment, requests, users
 from dotenv import load_dotenv
 import os
 
@@ -27,3 +27,4 @@ app.include_router(shipments.router)
 app.include_router(drivers.router)
 app.include_router(assignment.router)
 app.include_router(requests.router)
+app.include_router(users.router)
