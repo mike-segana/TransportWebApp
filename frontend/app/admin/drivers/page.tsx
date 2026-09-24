@@ -94,8 +94,38 @@ export default function AdminDriversPage() {
     }, [fetchDrivers, handleAuthError]);
 
     useEffect(() => {
-        void loadDrivers();
-    }, [loadDrivers]);
+        let cancelled = false;
+
+        const load = async () => {
+            try {
+                const data = await fetchDrivers();
+
+                if (cancelled) return;
+
+                setDrivers(data);
+                setError(null);
+            } catch (error: unknown) {
+                if (cancelled) return;
+
+                if (handleAuthError(error)) {
+                    return;
+                }
+
+                console.error("Failed to load drivers:", error);
+                setError("Failed to load drivers.");
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        void load();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [fetchDrivers, handleAuthError]);
 
     const refreshDrivers = async () => {
         setRefreshing(true);

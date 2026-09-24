@@ -85,6 +85,44 @@ export default function AdminShipmentsPage() {
     return Array.isArray(response.data) ? (response.data as Driver[]) : [];
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const [shipmentData, driverData] = await Promise.all([
+          fetchShipments(),
+          fetchDrivers(),
+        ]);
+
+        if (cancelled) return;
+
+        setShipments(shipmentData);
+        setDrivers(driverData);
+        setError(null);
+      } catch (error: unknown) {
+        if (cancelled) return;
+
+        if (handleAuthError(error)) {
+          return;
+        }
+
+        console.error("Failed to load shipment data:", error);
+        setError(getErrorDetail(error) ?? "Failed to load shipment data.");
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchShipments, fetchDrivers, handleAuthError]);
+
   const loadData = useCallback(async () => {
     try {
       const [shipmentData, driverData] = await Promise.all([
@@ -102,14 +140,8 @@ export default function AdminShipmentsPage() {
 
       console.error("Failed to load shipment data:", error);
       setError(getErrorDetail(error) ?? "Failed to load shipment data.");
-    } finally {
-      setLoading(false);
     }
   }, [fetchShipments, fetchDrivers, handleAuthError]);
-
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
 
   const refreshData = async () => {
     setRefreshing(true);
