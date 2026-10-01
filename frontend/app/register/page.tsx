@@ -2,19 +2,21 @@
 
 import { z } from "zod";
 import axios from "axios";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { api } from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { registerSchema } from "@/lib/validation/register";
 import Link from "next/link";
 
 type FormState = z.infer<typeof registerSchema>;
 
-export default function RegisterPage() {
+function RegisterForm() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const returnTo = searchParams.get("returnTo");
 
     const [form, setForm] = useState<FormState>({
         first_name: "",
@@ -53,7 +55,12 @@ export default function RegisterPage() {
 
             await api.post("/api/backend/auth/", result.data);
 
-            router.push("/login");
+            //router.push("/login");
+            const loginUrl = returnTo
+                ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+                : "/login"
+            router.push(loginUrl)
+
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
                 const detail = err.response?.data?.detail;
@@ -318,7 +325,13 @@ export default function RegisterPage() {
 
                         <button
                             type="button"
-                            onClick={() => router.push("/login")}
+                            onClick={() =>
+                                router.push(
+                                    returnTo
+                                        ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+                                        : "/login"
+                                )
+                            }
                             className="h-12 w-full rounded-xl border border-black/[0.08] bg-white text-sm font-semibold text-[#171A1F] transition hover:border-[#315CFF]/25 hover:bg-[#315CFF]/[0.025]"
                         >
                             Sign in
@@ -340,5 +353,13 @@ export default function RegisterPage() {
             </div>
 
         </main>
+    );
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={null}>
+            <RegisterForm />
+        </Suspense>
     );
 }

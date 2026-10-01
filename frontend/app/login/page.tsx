@@ -1,15 +1,24 @@
 "use client"; //tells next.js that this page runs in browser and not on server which is necessary because it uses useState, localStorage and click handlers
               //server: when you want data, security or dont need clicks/ interactions - client when: user interacts with UI, state changes in real time, browser APIs are needed
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginForm() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const returnTo = searchParams.get("returnTo");
+
+    const getSafeReturnPath = (value: string | null) => {
+        if (value === "/dashboard/create-request" || value === "/dashboard" || value === "/admin") {
+            return value;
+        }
+        return null;
+    }
 
     const handleLogin = async () => {
         if (!username || !password) {
@@ -36,11 +45,18 @@ export default function LoginPage() {
                     return;
                 }
                 const user = await userRes.json();
-                if (user.role === "admin") {
-                    router.push("/admin");
-                } else {
-                    router.push("/dashboard");
+
+                const safeReturnPath = getSafeReturnPath(returnTo);
+                if (safeReturnPath) {
+                    router.replace(safeReturnPath);
+                    return;
                 }
+                if (user.role === "admin") {
+                    router.replace("/admin");
+                } else {
+                    router.replace("/dashboard");
+                }
+
             } else {
                 alert("Invalid username or password.");
             }
@@ -216,5 +232,12 @@ export default function LoginPage() {
             </div>
 
         </main>
+    );
+}
+export default function LoginPage() {
+    return (
+        <Suspense fallback={null}>
+            <LoginForm />
+        </Suspense>
     );
 }

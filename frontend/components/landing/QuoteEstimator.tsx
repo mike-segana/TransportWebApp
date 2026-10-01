@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useRequestFlow } from "@/components/request-flow/RequestFlowProvider";
 
 type VehicleType = "small" | "medium" | "large" | "luton";
 
@@ -78,10 +80,15 @@ function startOfCalendar(month: Date) {
 
 export default function QuoteEstimator() {
   const today = new Date();
+  const router = useRouter();
+  const { updateRequest } = useRequestFlow();
 
   const [vehicle, setVehicle] = useState<VehicleType>("medium");
   const [miles, setMiles] = useState("");
   const [helpers, setHelpers] = useState(0);
+  const [pickupAddress, setPickupAddress] = useState("")
+  const [dropoffAddress, setDropoffAddress] = useState("")
+
   const [sameDay, setSameDay] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -149,6 +156,30 @@ export default function QuoteEstimator() {
 
     setSelectedDate(date);
     setCalendarOpen(false);
+  }
+
+  function handleContinue() {
+    if (!pickupAddress.trim()) {
+      alert("Please enter a pickup location");
+      return;
+    }
+    if (!dropoffAddress.trim()) {
+      alert("Please enter a drop-off address");
+      return;
+    }
+    if (!selectedDate) {
+      alert("Please choose a delivery date");
+      return;
+    }
+    const date = `${selectedDate.getFullYear()}-${String(
+      selectedDate.getMonth() + 1
+    ).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+    updateRequest("pickup_address", pickupAddress.trim());
+    updateRequest("dropoff_address", dropoffAddress.trim())
+    updateRequest("pickup_date", date);
+    updateRequest("helpers_needed", String(helpers));
+
+    router.push("/login?returnTo=/dashboard/create-request");
   }
 
   return (
@@ -297,7 +328,10 @@ export default function QuoteEstimator() {
 
                   <input
                     id="pickup"
+                    value={pickupAddress}
+                    onChange={(event) => setPickupAddress(event.target.value)}
                     placeholder="Collection location"
+                    autoComplete="street-address"
                     className="w-full rounded-2xl border border-black/10 bg-[#F8F9FB] px-4 py-4 text-sm outline-none transition placeholder:text-black/25 focus:border-[#155EEF]/40 focus:bg-white focus:ring-4 focus:ring-[#155EEF]/5"
                   />
                 </div>
@@ -312,7 +346,10 @@ export default function QuoteEstimator() {
 
                   <input
                     id="dropoff"
+                    value={dropoffAddress}
+                    onChange={(event) => setDropoffAddress(event.target.value)}
                     placeholder="Delivery location"
+                    autoComplete="street-address"
                     className="w-full rounded-2xl border border-black/10 bg-[#F8F9FB] px-4 py-4 text-sm outline-none transition placeholder:text-black/25 focus:border-[#155EEF]/40 focus:bg-white focus:ring-4 focus:ring-[#155EEF]/5"
                   />
                 </div>
@@ -672,6 +709,7 @@ export default function QuoteEstimator() {
 
               <button
                 type="button"
+                onClick={handleContinue}
                 className="group mt-4 flex w-full items-center justify-between rounded-2xl bg-[#155EEF] px-5 py-4 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(21,94,239,.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#0F4FCC]"
               >
                 Continue with request

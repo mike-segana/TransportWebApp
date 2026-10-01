@@ -1,11 +1,12 @@
-"use client"; //runs in browser as page uses useState, button clicks, form interactions, router navigation etc
+"use client";
 
 import axios from "axios";
-import { useEffect, useState} from "react"; //imports react state management
+import { useEffect, useState } from "react";
 import type { SyntheticEvent } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { requestSchema } from "@/lib/validation/request";
+import { useRequestFlow } from "@/components/request-flow/RequestFlowProvider";
 
 type FormState = {
     pickup_address: string;
@@ -22,41 +23,45 @@ type FormState = {
     pickup_loading_minutes: string;
     dropoff_loading_minutes: string;
 };
- 
+
 export default function CreateRequest() {
     const router = useRouter();
- 
+    const { request: requestFlow, clearRequest } = useRequestFlow();
+
     const [timeSlots, setTimeSlots] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
- 
+
     const [form, setForm] = useState<FormState>({
-        pickup_address: "",
-        pickup_postcode: "",
-        dropoff_address: "",
-        dropoff_postcode: "",
-        pickup_date: "",
-        pickup_time_slot: "",
-        helpers_needed: "",
-        pickup_floor: "",
-        pickup_has_lift: false,
-        dropoff_floor: "",
-        dropoff_has_lift: false,
-        pickup_loading_minutes: "",
-        dropoff_loading_minutes: "",
+        pickup_address: requestFlow.pickup_address,
+        pickup_postcode: requestFlow.pickup_postcode,
+        dropoff_address: requestFlow.dropoff_address,
+        dropoff_postcode: requestFlow.dropoff_postcode,
+        pickup_date: requestFlow.pickup_date,
+        pickup_time_slot: requestFlow.pickup_time_slot,
+        helpers_needed: requestFlow.helpers_needed,
+        pickup_floor: requestFlow.pickup_floor,
+        pickup_has_lift: requestFlow.pickup_has_lift,
+        dropoff_floor: requestFlow.dropoff_floor,
+        dropoff_has_lift: requestFlow.dropoff_has_lift,
+        pickup_loading_minutes: requestFlow.pickup_loading_minutes,
+        dropoff_loading_minutes: requestFlow.dropoff_loading_minutes,
     });
- 
+
     useEffect(() => {
         const fetchTimeSlots = async () => {
             try {
                 const response = await api.get(
                     "/api/backend/requests/time-slots"
                 );
- 
+
                 setTimeSlots(response.data);
             } catch (err: unknown) {
-                if (axios.isAxiosError(err) && err.response?.status === 401) {
+                if (
+                    axios.isAxiosError(err) &&
+                    err.response?.status === 401
+                ) {
                     router.replace("/login");
                 } else {
                     setError("Unable to load available pickup times.");
@@ -65,10 +70,10 @@ export default function CreateRequest() {
                 setLoadingSlots(false);
             }
         };
- 
+
         fetchTimeSlots();
     }, [router]);
- 
+
     const updateField = (
         field: keyof FormState,
         value: string | boolean
@@ -78,13 +83,13 @@ export default function CreateRequest() {
             [field]: value,
         }));
     };
- 
+
     const handleSubmit = async (e: SyntheticEvent) => {
         e.preventDefault();
- 
+
         setLoading(true);
         setError("");
- 
+
         try {
             const result = requestSchema.safeParse({
                 pickup_address: form.pickup_address,
@@ -103,7 +108,10 @@ export default function CreateRequest() {
             });
 
             if (!result.success) {
-                setError(result.error.issues[0]?.message ?? "Please check the form.");
+                setError(
+                    result.error.issues[0]?.message ??
+                        "Please check the form."
+                );
                 return;
             }
 
@@ -111,6 +119,8 @@ export default function CreateRequest() {
                 "/api/backend/requests/",
                 result.data
             );
+
+            clearRequest();
 
             router.push("/dashboard/requests");
         } catch (err: unknown) {
@@ -140,22 +150,21 @@ export default function CreateRequest() {
             setLoading(false);
         }
     };
- 
+
     const inputClass =
         "h-10 w-full rounded-lg border border-black/[0.08] bg-[#FAFAF9] px-3 text-sm text-[#171A1F] outline-none transition placeholder:text-black/25 focus:border-[#315CFF]/40 focus:bg-white focus:ring-4 focus:ring-[#315CFF]/[0.06]";
- 
+
     const selectClass =
         "h-10 w-full rounded-lg border border-black/[0.08] bg-[#FAFAF9] px-3 text-sm text-[#171A1F] outline-none transition focus:border-[#315CFF]/40 focus:bg-white focus:ring-4 focus:ring-[#315CFF]/[0.06] disabled:cursor-not-allowed disabled:opacity-50";
- 
+
     const labelClass =
         "mb-1.5 block text-[10px] font-bold uppercase tracking-[0.14em] text-black/40";
- 
+
     const sectionClass =
         "rounded-2xl border border-black/[0.06] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.035)]";
- 
+
     return (
         <div className="mx-auto w-full max-w-6xl pb-8">
-            {/* Page header */}
             <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
                     <button
@@ -165,28 +174,27 @@ export default function CreateRequest() {
                     >
                         ← Back to dashboard
                     </button>
- 
+
                     <h1 className="text-2xl font-semibold tracking-[-0.04em] text-[#171A1F]">
                         Create request
                     </h1>
- 
+
                     <p className="mt-1 text-sm text-black/40">
                         Provide the details needed to arrange your transport.
                     </p>
                 </div>
- 
+
                 <div className="hidden rounded-full border border-black/[0.06] bg-white px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.15em] text-black/35 shadow-sm sm:block">
                     New request
                 </div>
             </div>
- 
-            {/* Error */}
+
             {error && (
                 <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                     {error}
                 </div>
             )}
- 
+
             <form
                 onSubmit={handleSubmit}
                 className="space-y-4"
@@ -197,24 +205,24 @@ export default function CreateRequest() {
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#315CFF]/[0.08] text-xs font-bold text-[#315CFF]">
                             01
                         </div>
- 
+
                         <div>
                             <h2 className="font-semibold text-[#171A1F]">
                                 Journey
                             </h2>
- 
+
                             <p className="text-xs text-black/35">
                                 Where the transport starts and finishes.
                             </p>
                         </div>
                     </div>
- 
+
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
                             <label className={labelClass}>
                                 Pickup Address
                             </label>
- 
+
                             <input
                                 type="text"
                                 value={form.pickup_address}
@@ -229,12 +237,12 @@ export default function CreateRequest() {
                                 required
                             />
                         </div>
- 
+
                         <div>
                             <label className={labelClass}>
                                 Drop-off Address
                             </label>
- 
+
                             <input
                                 type="text"
                                 value={form.dropoff_address}
@@ -249,12 +257,12 @@ export default function CreateRequest() {
                                 required
                             />
                         </div>
- 
+
                         <div>
                             <label className={labelClass}>
                                 Pickup Postcode
                             </label>
- 
+
                             <input
                                 type="text"
                                 value={form.pickup_postcode}
@@ -268,12 +276,12 @@ export default function CreateRequest() {
                                 className={inputClass}
                             />
                         </div>
- 
+
                         <div>
                             <label className={labelClass}>
                                 Drop-off Postcode
                             </label>
- 
+
                             <input
                                 type="text"
                                 value={form.dropoff_postcode}
@@ -289,31 +297,31 @@ export default function CreateRequest() {
                         </div>
                     </div>
                 </section>
- 
+
                 {/* Date & Time */}
                 <section className={sectionClass}>
                     <div className="mb-5 flex items-center gap-3">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#315CFF]/[0.08] text-xs font-bold text-[#315CFF]">
                             02
                         </div>
- 
+
                         <div>
                             <h2 className="font-semibold text-[#171A1F]">
                                 Date & arrival window
                             </h2>
- 
+
                             <p className="text-xs text-black/35">
                                 Choose when the driver should arrive.
                             </p>
                         </div>
                     </div>
- 
+
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
                             <label className={labelClass}>
                                 Pickup Date
                             </label>
- 
+
                             <input
                                 type="date"
                                 value={form.pickup_date}
@@ -331,12 +339,12 @@ export default function CreateRequest() {
                                 className={inputClass}
                             />
                         </div>
- 
+
                         <div>
                             <label className={labelClass}>
                                 Pickup Time Slot
                             </label>
- 
+
                             <select
                                 value={form.pickup_time_slot}
                                 onChange={(e) =>
@@ -353,7 +361,7 @@ export default function CreateRequest() {
                                         ? "Loading available times..."
                                         : "Select arrival window"}
                                 </option>
- 
+
                                 {timeSlots.map((slot) => (
                                     <option
                                         key={slot}
@@ -366,35 +374,35 @@ export default function CreateRequest() {
                         </div>
                     </div>
                 </section>
- 
+
                 {/* Property Access */}
                 <section className={sectionClass}>
                     <div className="mb-5 flex items-center gap-3">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#315CFF]/[0.08] text-xs font-bold text-[#315CFF]">
                             03
                         </div>
- 
+
                         <div>
                             <h2 className="font-semibold text-[#171A1F]">
                                 Property access
                             </h2>
- 
+
                             <p className="text-xs text-black/35">
                                 Tell us about access at both locations.
                             </p>
                         </div>
                     </div>
- 
+
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="rounded-xl bg-[#FAFAF9] p-4">
                             <h3 className="mb-4 text-sm font-semibold text-[#171A1F]">
                                 Pickup
                             </h3>
- 
+
                             <label className={labelClass}>
                                 Floor
                             </label>
- 
+
                             <input
                                 type="number"
                                 min="0"
@@ -408,7 +416,7 @@ export default function CreateRequest() {
                                 placeholder="0"
                                 className={`${inputClass} bg-white`}
                             />
- 
+
                             <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-[#171A1F]">
                                 <input
                                     type="checkbox"
@@ -421,20 +429,20 @@ export default function CreateRequest() {
                                     }
                                     className="h-4 w-4 accent-[#315CFF]"
                                 />
- 
+
                                 Property has a lift
                             </label>
                         </div>
- 
+
                         <div className="rounded-xl bg-[#FAFAF9] p-4">
                             <h3 className="mb-4 text-sm font-semibold text-[#171A1F]">
                                 Drop-off
                             </h3>
- 
+
                             <label className={labelClass}>
                                 Floor
                             </label>
- 
+
                             <input
                                 type="number"
                                 min="0"
@@ -448,7 +456,7 @@ export default function CreateRequest() {
                                 placeholder="0"
                                 className={`${inputClass} bg-white`}
                             />
- 
+
                             <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-[#171A1F]">
                                 <input
                                     type="checkbox"
@@ -461,37 +469,37 @@ export default function CreateRequest() {
                                     }
                                     className="h-4 w-4 accent-[#315CFF]"
                                 />
- 
+
                                 Property has a lift
                             </label>
                         </div>
                     </div>
                 </section>
- 
+
                 {/* Assistance */}
                 <section className={sectionClass}>
                     <div className="mb-5 flex items-center gap-3">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#315CFF]/[0.08] text-xs font-bold text-[#315CFF]">
                             04
                         </div>
- 
+
                         <div>
                             <h2 className="font-semibold text-[#171A1F]">
                                 Assistance & loading
                             </h2>
- 
+
                             <p className="text-xs text-black/35">
                                 Tell us about helpers and loading time.
                             </p>
                         </div>
                     </div>
- 
+
                     <div className="grid gap-4 md:grid-cols-3">
                         <div>
                             <label className={labelClass}>
                                 Helpers Needed
                             </label>
- 
+
                             <input
                                 type="number"
                                 min="0"
@@ -506,12 +514,12 @@ export default function CreateRequest() {
                                 className={inputClass}
                             />
                         </div>
- 
+
                         <div>
                             <label className={labelClass}>
                                 Pickup Loading
                             </label>
- 
+
                             <input
                                 type="number"
                                 min="0"
@@ -527,12 +535,12 @@ export default function CreateRequest() {
                                 className={inputClass}
                             />
                         </div>
- 
+
                         <div>
                             <label className={labelClass}>
                                 Drop-off Loading
                             </label>
- 
+
                             <input
                                 type="number"
                                 min="0"
@@ -550,7 +558,7 @@ export default function CreateRequest() {
                         </div>
                     </div>
                 </section>
- 
+
                 {/* Actions */}
                 <div className="flex justify-end gap-3 pt-1">
                     <button
@@ -560,7 +568,7 @@ export default function CreateRequest() {
                     >
                         Cancel
                     </button>
- 
+
                     <button
                         type="submit"
                         disabled={loading || loadingSlots}
